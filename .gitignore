@@ -3,6 +3,7 @@
 # dependencies
 /node_modules
 /COVID-19
+/.prettierrc
 /.pnp
 .pnp.js
 

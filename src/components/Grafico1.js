@@ -1,26 +1,29 @@
 import React from 'react';
-//import {letterFrequency} from '@visx/mock-data';
 import { Group } from '@visx/group';
 import { Bar } from '@visx/shape';
 import { scaleLinear, scaleBand } from '@visx/scale';
 
 
-const json = require ('./andamento-nazionale.json');
+function BarGraph(props) {
+  const json = require ('../data/andamento-nazionale.json');
+  const selected = props.selected;
+  console.log(selected);
 
-var prova = [];
-
-for (var i=0; i<json.length; i++){
+  const data = json.map((datapoint)=> ({
+    datoScelto: datapoint[selected],
+    date: datapoint.data
+  })
+ );
+/*
+for (let i=0; i<json.length; i++){
    prova.push({
      "decessi" : json[i].deceduti,
      "date" : json[i].data
    }); 
-} 
-console.log(prova);
-
-const data = prova;
+} */
 
 // Define the graph dimensions and margins
-const width = 500;
+const width = 900;
 const height = 500;
 const margin = { top: 20, bottom: 20, left: 20, right: 20 };
 
@@ -30,7 +33,7 @@ const yMax = height - margin.top - margin.bottom;
 
 // We'll make some helpers to get at the data we want
 const x = d => d.date;
-const y = d => d.decessi;
+const y = d => d.datoScelto  ;
 
 // And then scale the graph by our data
 const xScale = scaleBand({
@@ -52,8 +55,6 @@ const xPoint = compose(xScale, x);
 const yPoint = compose(yScale, y);
 
 // Finally we'll embed it all in an SVG
-function BarGraph(props) {
-
   return (
     <svg width={width} height={height}>
       {data.map((d, i) => {

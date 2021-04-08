@@ -1,0 +1,15 @@
+.Post{
+    margin-top: 8%;
+}
+
+.grafico{
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+    border: black 1px solid;
+}
+.prova{
+     background-color: black;
+     position: relative;
+     display: inline-block;
+}
