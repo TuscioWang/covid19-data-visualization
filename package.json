@@ -9,6 +9,7 @@
     "@testing-library/react": "^11.2.6",
     "@testing-library/user-event": "^12.8.3",
     "@visx/axis": "^1.7.0",
+    "@visx/grid": "^1.7.0",
     "@visx/group": "^1.7.0",
     "@visx/mock-data": "^1.7.0",
     "@visx/scale": "^1.7.0",
