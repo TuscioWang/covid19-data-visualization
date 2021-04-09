@@ -2,25 +2,20 @@ import React from 'react';
 import { Group } from '@visx/group';
 import { Bar } from '@visx/shape';
 import { scaleLinear, scaleBand } from '@visx/scale';
+import { AxisBottom, AxisLeft } from '@visx/axis';
+//import { timeParse } from 'd3-time-format';
 
 
 function BarGraph(props) {
   const json = require ('../data/andamento-nazionale.json');
   const selected = props.selected;
-  console.log(selected);
-
+  
   const data = json.map((datapoint)=> ({
     datoScelto: datapoint[selected],
-    date: datapoint.data
+    date: datapoint.data.substring(2,10)
   })
  );
-/*
-for (let i=0; i<json.length; i++){
-   prova.push({
-     "decessi" : json[i].deceduti,
-     "date" : json[i].data
-   }); 
-} */
+
 
 // Define the graph dimensions and margins
 const width = 900;
@@ -30,6 +25,7 @@ const margin = { top: 20, bottom: 20, left: 20, right: 20 };
 // Then we'll create some bounds
 const xMax = width - margin.left - margin.right;
 const yMax = height - margin.top - margin.bottom;
+console.log("y", yMax,"X",xMax);
 
 // We'll make some helpers to get at the data we want
 const x = d => d.date;
@@ -40,7 +36,7 @@ const xScale = scaleBand({
   range: [0, xMax],
   round: true,
   domain: data.map(x),
-  padding: 0.4,
+  padding: 0.2,
 });
 
 const yScale = scaleLinear({
@@ -62,11 +58,38 @@ const yPoint = compose(yScale, y);
         return (
           <Group key={`bar-${i}`}>
             <Bar
-              x={xPoint(d)}
+            top={50}
+              x={xPoint(d) + 50}
               y={yMax - barHeight}
               height={barHeight}
               width={xScale.bandwidth()}
               fill="#fc2e1c"
+
+            />
+
+            <AxisLeft 
+            left={50}
+            label={selected}
+            scale={yScale} 
+            tickLabelProps={() => ({
+              fontSize: 11,
+              textAnchor: 'end',
+              dy: '0.50em',
+
+            })}
+            />
+            
+            <AxisBottom
+            left={50}
+              top={yMax}
+              scale={xScale}
+              numTicks={14}
+              label={"Data"}
+              tickLabelProps={() => ({
+                fontSize: 11,
+                textAnchor: 'middle',
+                dy: '0.20em',
+              })}
             />
           </Group>
         );

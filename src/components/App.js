@@ -6,43 +6,64 @@ import RadioGroup from "@material-ui/core/RadioGroup";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
 import FormControl from "@material-ui/core/FormControl";
 import FormLabel from "@material-ui/core/FormLabel";
+import Container from '@material-ui/core/Container';
 import "../App.css";
 
 export default function RadioButtonsGroup() {
-  const [value, setValue] = React.useState("decessi");
+  const [value, setValue] = React.useState("totale_positivi");
   
   const handleChange = (event) => {
-    console.log("stringa: ", event.target.value);
     setValue(event.target.value);
   };
 
   return (
     <div>
-      <Grid container spacing={3}>
-        <Grid item xs={12} container justify="center" alignItems="center">
-          <Grid item xs={8}>
-            <BarGraph selected={value} />
-          </Grid>
+      <Grid container >
+        <Grid item xs={12} container >
 
-          <Grid item xs={2}>
+          <Grid item xs={9}>
+          <Container className="generale">
+            <Container className="grafico">
+              <BarGraph  selected={value} />
+            </Container>
+          </Container>
+          </Grid>
+          
+
+          <Grid item xs={3}>
+          <Container className="legenda">
             <FormControl component="fieldset">
               <FormLabel component="legend">Seleziona il dato:</FormLabel>
               <RadioGroup
                 aria-label="axisY"
                 name="axisY"
-                Value={value}
+                value={value}
                 onChange={handleChange}
               >
+                <FormControlLabel
+                  value="totale_positivi"
+                  control={<Radio />}
+                  label="Positivi"
+                />
+                <FormControlLabel
+                  value="ricoverati_con_sintomi"
+                  control={<Radio />}
+                  label="Ricoverati con sintomi"
+                />
+                <FormControlLabel
+                  value="isolamento_domiciliare"
+                  control={<Radio />}
+                  label="Quarantena"
+                />
                 <FormControlLabel
                   value="deceduti"
                   control={<Radio />}
                   label="Decessi"
                 />
-
                 <FormControlLabel
                   value="terapia_intensiva"
                   control={<Radio />}
-                  label="In terapia"
+                  label="In Terapia"
                 />
 
                 <FormControlLabel
@@ -58,6 +79,7 @@ export default function RadioButtonsGroup() {
                 />
               </RadioGroup>
             </FormControl>
+            </Container>
           </Grid>
         </Grid>
       </Grid>
