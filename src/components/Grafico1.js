@@ -1,11 +1,12 @@
 import React from 'react';
-import { Group } from '@visx/group';
-import { Bar } from '@visx/shape';
+//import { Group } from '@visx/group';
+import { Bar, AreaClosed } from '@visx/shape';
 import { scaleLinear, scaleBand } from '@visx/scale';
 import { AxisBottom, AxisLeft } from '@visx/axis';
-import {Grid } from '@visx/grid';
+import { GridColumns } from '@visx/grid';
+import { ScaleSVG } from '@visx/responsive';
+import { GradientPurpleRed, RadialGradient} from '@visx/gradient';
 //import { timeParse } from 'd3-time-format';
-
 
 function BarGraph(props) {
   const json = require ('../data/andamento-nazionale.json');
@@ -21,10 +22,10 @@ function BarGraph(props) {
 // Define the graph dimensions and margins
 const width = 900;
 const height = 500;
-const margin = { top: 20, bottom: 20, left: 20, right: 20 };
+const margin = { top: 30, bottom: 20 };
 
 // Then we'll create some bounds
-const xMax = width - margin.left - margin.right;
+const xMax = width //- margin.left - margin.right;
 const yMax = height - margin.top - margin.bottom;
 
 // We'll make some helpers to get at the data we want
@@ -51,30 +52,61 @@ const yPoint = compose(yScale, y);
 
 // Finally we'll embed it all in an SVG
   return (
-    <svg width={width} height={height}>
-      <Group key={"group-graph"} left={margin.left}>
+    <ScaleSVG width={width} height={height}>
+      
+      <rect 
+      width={width}
+      height={height}
+      fill="url(#radial)"
+      rx= {15}
+      />
+      <RadialGradient id='radial' from= "#b3ecff" to="#0a8075" r="90%"/>
+      <GradientPurpleRed id='pr' rotate="20"/>
+
+      {/* <Group key={"group-graph"} top= {margin.top} left={margin.left}>
         {data.map((d, i) => {
           const barHeight = yMax - yPoint(d) ;
           return (
-            <Group key={`bar-${i}`}>
-              <Bar
+             <Group key={`bar-${i}`}>
+              <AreaClosed
+                data= {data}
                 x={xPoint(d)}
                 y={yMax - barHeight}
-                height={barHeight}
+                width={barHeight}
+                yScale={yScale}
                 width={xScale.bandwidth()}
-                fill="#fc2e1c"
+                fill="url(#linear)"
+                
               />
             </Group>
           );
-        })}
-      <GridRows />
+        })} */}
+
+      <AreaClosed
+        data={data}
+        x={d => xPoint(d)}
+        y={d => yMax - (yMax - yPoint(d))}
+        yScale={yScale}
+        fill={"url(#pr)"}
+      />
+    
+      <GridColumns
+        scale={xScale}
+        height={yMax}
+        numTicks={14}
+        strokeOpacity={0.3}
+        stroke="+#edffea"
+        strokeDasharray="1,3"
+      />
+
       <AxisLeft 
-        left={40}
+        left={20}
         label={selected}
         labelProps={()=>({
           fontSize: 11,
           dy: '0.40em',
         })}
+        hideAxisLine={false}
         scale={yScale} 
         tickLabelProps={() => ({
           fontSize: 11,
@@ -94,8 +126,8 @@ const yPoint = compose(yScale, y);
           dy: '0.40em',
         })}
       />
-      </Group>
-    </svg>
+     {/*  </Group> */}
+    </ScaleSVG>
   );
 }
 
