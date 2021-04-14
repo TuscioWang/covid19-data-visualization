@@ -8,11 +8,11 @@
     position: relative;
     border:black 1px solid;
     background-color: #cfe8fc;
-    height: 100vh;
+    height: 75vw;
     width: 50%;
 }
 
-.grafico{
+.grafhCss{
     position: absolute;
     left: 0;
     right: 0;

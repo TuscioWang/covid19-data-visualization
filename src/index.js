@@ -1,14 +1,15 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
-//import BarGraph from './components/Grafico1';
 import reportWebVitals from './reportWebVitals';
 import App from './components/App';
+//import { ParentSize } from '@visx/responsive';
 
 
 ReactDOM.render(
   <React.StrictMode>
     <App />
+   
   </React.StrictMode>,
   document.getElementById('root')
 );
