@@ -15,37 +15,12 @@ const json = require('../data/andamento-nazionale.json');
 function XYGraph(props) {
 
   const selected = props.selected;
-  const selectedPeriod = props.selectedPeriod;
-  const slider = parseInt(props.slider);
-
-  let brush = [7, 7];
-  switch (selectedPeriod) {
-    case "settimana":
-      if (slider == -1) {
-        brush[0] -= 7; brush[1] = brush[0] + 7
-      } else {
-        brush[0] += 7; brush[1] = brush[0] + 7
-      }
-      break;
-
-    case "mese": brush[0] = 0; brush[1] = 30; break;
-      if (slider == -1) {
-        brush[0] -= 7; brush[1] = brush[0] + 7
-      } else {
-        brush[0] += 7; brush[1] = brush[0] + 7
-      }
-      break;
-
-    case "anno": brush[0] = 0; brush[1] = 365; break;
-      if (slider == -1) {
-        brush[0] -= 7; brush[1] = brush[0] + 7
-      } else {
-        brush[0] += 7; brush[1] = brush[0] + 7
-      }
-      break;
+  const startDate=props.startDate;
+  const endDate=props.endDate;
+  console.log(typeof startDate);
 
 
-  }
+  console.log("inizio",startDate,"fine",endDate);
 
   const width = 900;
   const height = 500;
@@ -71,14 +46,16 @@ function XYGraph(props) {
         const data = json.map((datapoint) => ({
           datoScelto: datapoint[sel],
           date: datapoint.data.substring(2, 10)
-        })
-        );
+        }));
 
-        const choose = data.slice(brush[0], brush[1]);
-        console.log(choose);
+        const filteredData = data.map(
+          d =>
+            new Date(startDate) < new Date(d.date) && new Date(endDate) > new Date(d.date)
+        );
+        console.log(filteredData);
         return (
           <XYChart width={width} height={height} xScale={{ type: "band" }} yScale={{ type: "linear" }}>
-            <AnimatedLineSeries stroke={"url(#linear)"} dataKey="Line 1" data={choose} {...accessors} />
+            <AnimatedLineSeries stroke={"url(#linear)"} dataKey="Line 1" data={filteredData} {...accessors} />
 
           </XYChart>);
       })}

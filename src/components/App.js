@@ -8,76 +8,81 @@ import FormLabel from "@material-ui/core/FormLabel";
 import Container from '@material-ui/core/Container';
 //import AreaClosed from "./AreaClosed";
 import Checkbox from '@material-ui/core/Checkbox';
-import XYChart from "./XYChart";
+import XYGraph from "./XYChart";
 import Button from '@material-ui/core/Button';
-import Menu from '@material-ui/core/Menu';
+import Select from '@material-ui/core/Select';
+import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
 import moment from "moment";
+import { makeStyles } from '@material-ui/core/styles';
 
 
 export default function CheckboxesGroup() {
   const [selectedGraphs, setSelectedGraphs] = React.useState(["totale_positivi"]);
-  const [add, setAdd] = React.useState(0);
-  const [period, setSelectedPeriod] = React.useState();
-  const [anchorEl, setAnchorEl] = React.useState();
-
   const [datesInterval, setDatesInterval] = React.useState([]);
+  const [period, setPeriod] = React.useState('year');
+  const [shift, setShift] = React.useState(0);
+  const moment = require("moment");
 
-  //Aggiunge le date di inizio e fine
+  const m = moment();
+  //console.log("tempo attuale",m.toISOString());
+
+  const useStyles = makeStyles((theme) => ({
+    formControl: {
+      margin: theme.spacing(1),
+      minWidth: 100,
+    },
+  }));
+  const classes = useStyles();
+
+  const handleChange = (event) => {
+    const checked = event.target.checked;
+    const graph = event.target.value;
+    const updatedGraphs =
+      checked ?
+        [...selectedGraphs, graph] :
+        selectedGraphs.filter(cur => cur !== graph);
+    setSelectedGraphs(updatedGraphs);
+  };
+
+  //Funzione che aggiunge le date di inizio e fine
   const updateStartEndDates = (period, shift) => {
-    // start e end date
-
+    let startDate;
+    let endDate;
     if (period === "week") {
-      const startDate = moment().startOf("week").add(shift, "weeks");
-      const endDate = moment().endOf("week").add(shift, "weeks");
+      startDate = moment(m).startOf("week").add(shift, "w").format('LL');
+      endDate = moment(m).endOf("week").add(shift, "w").format('LL');
+
+    } else if (period === "month") {
+      startDate = moment(m).startOf("month").add(shift, "M").format('LL');
+      endDate = moment(m).endOf("month").add(shift, "M").format('LL');
     }
-    // salvare nello stato
+    else {
+      startDate = moment(m).startOf("year").add(shift, "y").format('LL');
+      endDate = moment(m).endOf("year").add(shift, "y").format('LL');
+    }
+
     setDatesInterval([startDate, endDate]);
   }
 
   //prende il periodo selezionato
   const handlePeriod = (event) => {
-    const {myValue} = event.currentTarget.dataset;
-  
-    setSelectedPeriod(myValue);
-    updateStartEndDates(myValue, add);
+    const period = event.target.value;
+    setPeriod(period);
+    updateStartEndDates(period, shift);
   }
 
-  //fa lo schift rispetto al momento in cui sono del tempo
-  const handleAdd = (event) => {
-    const {myValue} = event.currentTarget.dataset;
-
-    setAdd(add + myValue); //add = shift myValue è il valore cliccato 
-    updateStartEndDates(period, myValue);
-  }
-
+  //fa lo schift rispetto al momento in cui sono nel tempo
   const handleClick = (event) => {
-   
-    setAnchorEl(event.currentTarget);
-  };
-  const handleClose = (e) => {
-    setAnchorEl(null);
-  };
+    const value = parseInt(event.currentTarget.value);
+    const newShift = shift + value;
 
-  const handleChange = (event) => {
+    setShift(newShift);
+    updateStartEndDates(period, newShift);
+  }
 
-    const checked = event.target.checked;
-    const graph = event.target.value;
-
-    const updatedGraphs =
-      checked ?
-        [...selectedGraphs, graph] :
-        selectedGraphs.filter(cur => cur !== graph);
-
-    setSelectedGraphs(updatedGraphs);
-  };
-
+  //stardate=datainterval[0], endData=datainterval [1]
   const [startDate, endDate] = datesInterval;
-
-  /*
-  const startDate = datesInterval[0];
-  const endDate = datesInterval[1];
-  */
 
   return (
     <div>
@@ -87,61 +92,41 @@ export default function CheckboxesGroup() {
             <Container className="generale">
               <Container className="graphCss">
                 <h1> GRAFICO COVID 2020-2021 </h1>
-                <XYChart
+                <XYGraph
                   selected={selectedGraphs}
                   startDate={startDate}
                   endDate={endDate}
                 />
               </Container>
-              <Grid container justify="space-around">
+              <Grid container alignItems="center" justify="space-evenly">
                 <Button
                   variant="contained"
                   color="secondary"
-                  data-my-value={-1}
-                  onClick={handleAdd}
+                  value={-1}
+                  onClick={handleClick}
                 >
                   - INDIETRO
               </Button>
-                <Button
-                  aria-controls="simple-menu"
-                  aria-haspopup="true"
-                  variant="contained"
-                  color="primary"
-                  onClick={handleClick}
-                >
-                  periodo
-              </Button>
-                <Menu
-                  id="simple-menu"
-                  anchorEl={anchorEl}
-                  keepMounted
-                  open={Boolean(anchorEl)}
-                  onClose={handleClose}
-                >
-                  <MenuItem
-                    onClick={handlePeriod}
-                    data-my-value="settimana"
+
+                <FormControl variant="filled" className={classes.formControl}>
+                  <InputLabel id="simple-select-label">Period</InputLabel>
+                  <Select
+                    labelId="simple-select-label"
+                    id="simple-select"
+                    value={period}
+                    onChange={handlePeriod}
                   >
-                    Settimana
-                  </MenuItem>
-                  <MenuItem
-                    onClick={handlePeriod}
-                    data-my-value="mese"
-                  >
-                    Mese
-                    </MenuItem>
-                  <MenuItem
-                    onClick={handlePeriod}
-                    data-my-value="anno"
-                  >
-                    Anno
-                    </MenuItem>
-                </Menu>
+                    <MenuItem value={"week"}>Week</MenuItem>
+                    <MenuItem value={"month"}>Month</MenuItem>
+                    <MenuItem value={"year"}>Year</MenuItem>
+                  </Select>
+                </FormControl>
+
                 <Button
                   variant="contained"
                   color="secondary"
-                  data-my-value={+1}
-                  onClick={handleAdd}
+                  value={1}
+                  onClick={handleClick}
                 >
                   + AVANTI
               </Button>
@@ -200,6 +185,6 @@ export default function CheckboxesGroup() {
           </Grid>
         </Grid>
       </Grid>
-    </div>
+    </div >
   );
 }
