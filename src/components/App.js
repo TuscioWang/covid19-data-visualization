@@ -16,6 +16,31 @@ import MenuItem from '@material-ui/core/MenuItem';
 import moment from "moment";
 import { makeStyles } from '@material-ui/core/styles';
 
+const CHECKBOX_DATA = {
+  totale_positivi: {
+    label : "Positivi",
+  },
+  ricoverati_con_sintomi: {
+    label : "Ricoverati con sintomi",
+    
+  },
+  isolamento_domiciliare: {
+    label : "Quarantena",
+  },
+  deceduti: {
+    label : "Decessi",
+    
+  },
+  terapia_intensiva: {
+    label : "In Terapia",
+  },
+  tamponi: {
+   label : "Tamponati",
+  },
+  dimessi_guariti: {
+    label: "Guariti",
+  },
+}
 
 export default function CheckboxesGroup() {
   const [selectedGraphs, setSelectedGraphs] = React.useState(["totale_positivi"]);
@@ -25,7 +50,6 @@ export default function CheckboxesGroup() {
   const moment = require("moment");
 
   const m = moment();
-  //console.log("tempo attuale",m.toISOString());
 
   const useStyles = makeStyles((theme) => ({
     formControl: {
@@ -50,16 +74,16 @@ export default function CheckboxesGroup() {
     let startDate;
     let endDate;
     if (period === "week") {
-      startDate = moment(m).startOf("week").add(shift, "w").format('LL');
-      endDate = moment(m).endOf("week").add(shift, "w").format('LL');
+      startDate = moment(m).startOf("week").add(shift, "W").format();
+      endDate = moment(m).endOf("week").add(shift, "weeks").format();
 
     } else if (period === "month") {
-      startDate = moment(m).startOf("month").add(shift, "M").format('LL');
-      endDate = moment(m).endOf("month").add(shift, "M").format('LL');
+      startDate = moment(m).startOf("month").add(shift, "M").format();
+      endDate = moment(m).endOf("month").add(shift, "M").format();
     }
     else {
-      startDate = moment(m).startOf("year").add(shift, "y").format('LL');
-      endDate = moment(m).endOf("year").add(shift, "y").format('LL');
+      startDate = moment(m).startOf("year").add(shift, "y").format();
+      endDate = moment(m).endOf("year").add(shift, "y").format();
     }
 
     setDatesInterval([startDate, endDate]);
@@ -144,41 +168,13 @@ export default function CheckboxesGroup() {
                   value={selectedGraphs}
                   onChange={handleChange}
                 >
-                  <FormControlLabel
-                    value="totale_positivi"
-                    control={<Checkbox defaultChecked />}
-                    label="Positivi"
-                  />
-                  <FormControlLabel
-                    value="ricoverati_con_sintomi"
-                    control={<Checkbox />}
-                    label="Ricoverati con sintomi"
-                  />
-                  <FormControlLabel
-                    value="isolamento_domiciliare"
-                    control={<Checkbox />}
-                    label="Quarantena"
-                  />
-                  <FormControlLabel
-                    value="deceduti"
-                    control={<Checkbox />}
-                    label="Decessi"
-                  />
-                  <FormControlLabel
-                    value="terapia_intensiva"
-                    control={<Checkbox />}
-                    label="In Terapia"
-                  />
-                  <FormControlLabel
-                    value="tamponi"
-                    control={<Checkbox />}
-                    label="Tamponati"
-                  />
-                  <FormControlLabel
-                    value="dimessi_guariti"
-                    control={<Checkbox />}
-                    label="Guariti"
-                  />
+                  {Object.keys(CHECKBOX_DATA).map((key, index) => 
+                    <FormControlLabel
+                      value={key}
+                      control={<Checkbox defaultChecked={index === 0} />}
+                      label={CHECKBOX_DATA[key].label}
+                    />
+                  )}
                 </FormGroup>
               </FormControl>
             </Container>
