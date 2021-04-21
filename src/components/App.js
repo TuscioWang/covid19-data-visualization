@@ -9,41 +9,16 @@ import Container from '@material-ui/core/Container';
 //import AreaClosed from "./AreaClosed";
 import Checkbox from '@material-ui/core/Checkbox';
 import XYGraph from "./XYChart";
+import Grafico2 from "./Grafico2";
 import Button from '@material-ui/core/Button';
 import Select from '@material-ui/core/Select';
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
-import moment from "moment";
 import { makeStyles } from '@material-ui/core/styles';
-
-const CHECKBOX_DATA = {
-  totale_positivi: {
-    label : "Positivi",
-  },
-  ricoverati_con_sintomi: {
-    label : "Ricoverati con sintomi",
-    
-  },
-  isolamento_domiciliare: {
-    label : "Quarantena",
-  },
-  deceduti: {
-    label : "Decessi",
-    
-  },
-  terapia_intensiva: {
-    label : "In Terapia",
-  },
-  tamponi: {
-   label : "Tamponati",
-  },
-  dimessi_guariti: {
-    label: "Guariti",
-  },
-}
+import {CHECKBOX_DATA} from './AppConfig';
 
 export default function CheckboxesGroup() {
-  const [selectedGraphs, setSelectedGraphs] = React.useState(["totale_positivi"]);
+  const [selectedGraphs, setSelectedGraphs] = React.useState([]);
   const [datesInterval, setDatesInterval] = React.useState([]);
   const [period, setPeriod] = React.useState('year');
   const [shift, setShift] = React.useState(0);
@@ -125,7 +100,7 @@ export default function CheckboxesGroup() {
               <Grid container alignItems="center" justify="space-evenly">
                 <Button
                   variant="contained"
-                  color="secondary"
+                  color="primary"
                   value={-1}
                   onClick={handleClick}
                 >
@@ -148,7 +123,7 @@ export default function CheckboxesGroup() {
 
                 <Button
                   variant="contained"
-                  color="secondary"
+                  color="primary"
                   value={1}
                   onClick={handleClick}
                 >
@@ -168,10 +143,14 @@ export default function CheckboxesGroup() {
                   value={selectedGraphs}
                   onChange={handleChange}
                 >
-                  {Object.keys(CHECKBOX_DATA).map((key, index) => 
+                  {Object.keys(CHECKBOX_DATA).map((key, index) =>
                     <FormControlLabel
                       value={key}
-                      control={<Checkbox defaultChecked={index === 0} />}
+                      key={key}
+                      control={
+                      <Checkbox color={CHECKBOX_DATA[key].color}
+                      />
+                      }
                       label={CHECKBOX_DATA[key].label}
                     />
                   )}
