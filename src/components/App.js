@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import "../App.css";
 import Grid from "@material-ui/core/Grid";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
@@ -9,27 +9,30 @@ import Container from '@material-ui/core/Container';
 //import AreaClosed from "./AreaClosed";
 import Checkbox from '@material-ui/core/Checkbox';
 import XYGraph from "./XYChart";
-import Grafico2 from "./Grafico2";
+//import Grafico2 from "./Grafico2";
 import Button from '@material-ui/core/Button';
 import Select from '@material-ui/core/Select';
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
 import { makeStyles } from '@material-ui/core/styles';
-import {CHECKBOX_DATA} from './AppConfig';
+import { CHECKBOX_DATA } from './AppConfig';
 
 export default function CheckboxesGroup() {
-  const [selectedGraphs, setSelectedGraphs] = React.useState([]);
-  const [datesInterval, setDatesInterval] = React.useState([]);
+  const moment = require("moment");
+  const m = moment();
+
+  const firstStart = moment(m).startOf("year").format("LLL");
+  const firstEnd = moment(m).endOf("year").format("LLL");
+
+  const [selectedGraphs, setSelectedGraphs] = React.useState(["totale_positivi"]);
+  const [datesInterval, setDatesInterval] = React.useState([firstStart, firstEnd]);
   const [period, setPeriod] = React.useState('year');
   const [shift, setShift] = React.useState(0);
-  const moment = require("moment");
-
-  const m = moment();
 
   const useStyles = makeStyles((theme) => ({
     formControl: {
       margin: theme.spacing(1),
-      minWidth: 100,
+      minWidth: 150,
     },
   }));
   const classes = useStyles();
@@ -49,16 +52,16 @@ export default function CheckboxesGroup() {
     let startDate;
     let endDate;
     if (period === "week") {
-      startDate = moment(m).startOf("week").add(shift, "W").format();
-      endDate = moment(m).endOf("week").add(shift, "weeks").format();
+      startDate = moment(m).startOf("week").add(shift, "W").format("LLL");
+      endDate = moment(m).endOf("week").add(shift, "weeks").format("LLL");
 
     } else if (period === "month") {
-      startDate = moment(m).startOf("month").add(shift, "M").format();
-      endDate = moment(m).endOf("month").add(shift, "M").format();
+      startDate = moment(m).startOf("month").add(shift, "M").format("LLL");
+      endDate = moment(m).endOf("month").add(shift, "M").format("LLL");
     }
     else {
-      startDate = moment(m).startOf("year").add(shift, "y").format();
-      endDate = moment(m).endOf("year").add(shift, "y").format();
+      startDate = moment(m).startOf("year").add(shift, "y").format("LLL");
+      endDate = moment(m).endOf("year").add(shift, "y").format("LLL");
     }
 
     setDatesInterval([startDate, endDate]);
@@ -148,8 +151,9 @@ export default function CheckboxesGroup() {
                       value={key}
                       key={key}
                       control={
-                      <Checkbox color={CHECKBOX_DATA[key].color}
-                      />
+                        <Checkbox defaultChecked={(index === 0) ? true : false}
+                          color={CHECKBOX_DATA[key].color}
+                        />
                       }
                       label={CHECKBOX_DATA[key].label}
                     />

@@ -1,28 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import {
-  //AnimatedGrid,
+  //AnimatedAxis,
   AnimatedLineSeries,
   XYChart,
-  AnimatedAxis,
-  AnimatedGrid,
   //Tooltip,
 } from '@visx/xychart';
 import { ScaleSVG } from '@visx/responsive';
 import { RadialGradient, LinearGradient } from '@visx/gradient';
-import { AxisBottom, AxisLeft, AxisRight } from '@visx/axis';
+import { Axis } from '@visx/axis';
 import { scaleLinear, scaleBand, scaleTime } from '@visx/scale';
-import { GridColumns } from '@visx/grid';
+//import { GridColumns, Grid } from '@visx/grid';
 import { DATA_COLORS } from './AppConfig';
 import { Group } from '@visx/group';
 
-//const json = require('../data/andamento-nazionale.json');
-
 function XYGraph(props) {
-
   const selected = props.selected;
   const startDate = props.startDate;
   const endDate = props.endDate;
   const [dataCovid, setData] = useState([]);
+
+  console.log("START:", startDate, "END:", endDate);
+  
 
   const getData = async () => {
     await fetch("/pcm-dpc/COVID-19/master/dati-json/dpc-covid19-ita-andamento-nazionale.json")
@@ -33,9 +31,6 @@ function XYGraph(props) {
   useEffect(() => {
     getData();
   }, []);
-
-
-  console.log("START:", startDate, "END:", endDate);
 
   const width = 900;
   const height = 500;
@@ -48,8 +43,10 @@ function XYGraph(props) {
     xAccessor: d => d.date,
     yAccessor: d => d.datoScelto,
   }
+  /* const parseDate = timeParse('%Y-%m-%d');
+  const formatDate = (date) => parseDate(date); */
 
-  const xScale = scaleBand({
+  const xScale = scaleTime({
     range: [0, xMax],
     round: true,
     domain: dataCovid.map(accessors.xAccessor),
@@ -60,11 +57,6 @@ function XYGraph(props) {
     round: true,
     domain: [0, Math.max(...dataCovid.map(accessors.yAccessor))],
   });
-
-  /* const compose=(scale,accessor) => data => scale(accessor(data));
-  const xPoint= compose(xScale,x);
-  const yPoint= compose(yScale,y);
-  */
 
   return (
     <ScaleSVG width={width} height={height}>
@@ -79,26 +71,41 @@ function XYGraph(props) {
       <RadialGradient id='radial' from="#b3ecff" to="#0a8075" r="90%" />
       <LinearGradient id='linear' from="red" to="yellow" rotate="0" />
 
+      {/*  <GridColumns
+        top={margin.top}
+        scale={xScale}
+        height={yMax}
+        numTicks={14}
+        stroke="white"
+        strokeOpacity={0,1}
+        strokeDasharray="1,3"
+      /> */}
       <Group left={margin.left} top={margin.top}>
-
-        <AxisLeft
+        <Axis
+          key={"axis-left"}
+          orientation="left"
           scale={yScale}
+          numTicks={14}
         />
-
-        <AxisBottom
+        <Axis
+          key={"axis-bottom"}
           top={yMax}
-          scale={xScale}
+          orientation="bottom"
           label="Data"
+          scale={xScale}
           numTick={14}
+          tickFormat={dataCovid.map(accessors.xAccessor)}
         />
 
         <XYChart
+          key={"xygraph"}
           width={xMax}
           height={yMax}
           xScale={{ type: "band" }}
           yScale={{ type: "linear" }}
         >
-          {selected.map((sel,i) => {
+
+          {selected.map((sel, i) => {
 
             const data = dataCovid.map((datapoint) => ({
               datoScelto: datapoint[sel],
@@ -121,6 +128,8 @@ function XYGraph(props) {
               />
             );
           })}
+
+
         </XYChart>
       </Group>
     </ScaleSVG>

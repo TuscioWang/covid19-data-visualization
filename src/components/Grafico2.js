@@ -12,7 +12,7 @@ import { Group } from '@visx/group';
 import { LinePath } from '@visx/shape'
 import { RadialGradient, LinearGradient } from '@visx/gradient';
 import { AxisBottom, AxisLeft } from '@visx/axis';
-import { scaleLinear, scaleBand, scaleTime } from '@visx/scale';
+import { scaleLinear, scaleBand } from '@visx/scale';
 import { GridColumns } from '@visx/grid';
 import { DATA_COLORS } from './AppConfig';
 
