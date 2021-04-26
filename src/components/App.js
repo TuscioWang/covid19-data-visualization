@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import "../App.css";
 import Grid from "@material-ui/core/Grid";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
@@ -9,13 +9,14 @@ import Container from '@material-ui/core/Container';
 //import AreaClosed from "./AreaClosed";
 import Checkbox from '@material-ui/core/Checkbox';
 import XYGraph from "./XYChart";
-//import Grafico2 from "./Grafico2";
+//import App from "./Grafico2";
 import Button from '@material-ui/core/Button';
 import Select from '@material-ui/core/Select';
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
 import { makeStyles } from '@material-ui/core/styles';
 import { CHECKBOX_DATA } from './AppConfig';
+import App from "./Grafico2";
 
 export default function CheckboxesGroup() {
   const moment = require("moment");
@@ -37,6 +38,8 @@ export default function CheckboxesGroup() {
   }));
   const classes = useStyles();
 
+
+  //Funzione che mi aggiorna l'array contenenti il grafico selezionato
   const handleChange = (event) => {
     const checked = event.target.checked;
     const graph = event.target.value;
@@ -63,18 +66,17 @@ export default function CheckboxesGroup() {
       startDate = moment(m).startOf("year").add(shift, "y").format("LLL");
       endDate = moment(m).endOf("year").add(shift, "y").format("LLL");
     }
-
     setDatesInterval([startDate, endDate]);
   }
 
-  //prende il periodo selezionato
+  //Prende il periodo selezionato
   const handlePeriod = (event) => {
     const period = event.target.value;
     setPeriod(period);
     updateStartEndDates(period, shift);
   }
 
-  //fa lo schift rispetto al momento in cui sono nel tempo
+  //Fa lo schift rispetto al momento in cui sono nel tempo
   const handleClick = (event) => {
     const value = parseInt(event.currentTarget.value);
     const newShift = shift + value;
@@ -98,6 +100,7 @@ export default function CheckboxesGroup() {
                   selected={selectedGraphs}
                   startDate={startDate}
                   endDate={endDate}
+                  periodSelected={period}
                 />
               </Container>
               <Grid container alignItems="center" justify="space-evenly">
