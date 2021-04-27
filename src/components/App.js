@@ -16,7 +16,7 @@ import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
 import { makeStyles } from '@material-ui/core/styles';
 import { CHECKBOX_DATA } from './AppConfig';
-import App from "./Grafico2";
+//import Theshold from "./Grafico2";
 
 export default function CheckboxesGroup() {
   const moment = require("moment");
@@ -101,7 +101,8 @@ export default function CheckboxesGroup() {
                   startDate={startDate}
                   endDate={endDate}
                   periodSelected={period}
-                />
+                /> 
+                {/* <Theshold /> */}
               </Container>
               <Grid container alignItems="center" justify="space-evenly">
                 <Button

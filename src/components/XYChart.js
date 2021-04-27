@@ -3,6 +3,7 @@ import {
   //AnimatedAxis,
   AnimatedLineSeries,
   XYChart,
+  Grid,
 } from '@visx/xychart';
 import { ScaleSVG } from '@visx/responsive';
 import { RadialGradient, LinearGradient } from '@visx/gradient';
@@ -13,23 +14,33 @@ import { DATA_COLORS } from './AppConfig';
 import { Group } from '@visx/group';
 import { useTooltip, useTooltipInPortal, TooltipWithBounds } from '@visx/tooltip';
 import { localPoint } from '@visx/event';
-import { Threshold } from '@visx/threshold';
-import { curveBasis } from '@visx/curve';
+import { curveBasis, curveCardinal } from '@visx/curve';
+import { GridRows, GridColumns } from '@visx/grid';
 import { LinePath, LineSeries } from '@visx/shape';
-
 function XYGraph(props) {
   const selected = props.selected;
   const startDate = props.startDate;
   const endDate = props.endDate;
   const periodSelected = props.periodSelected;
   const moment = require("moment");
-  const m = moment();
   const width = 900;
   const height = 500;
-  const margin = { top: 40, bottom: 50, left: 40, right: 40 };
+  const margin = { top: 40, bottom: 50, left: 40, right: 30 };
   const xMax = width - margin.left - margin.right;
   const yMax = height - margin.top - margin.bottom;
   const [dataCovid, setData] = useState([]);
+
+  const dataBase = [
+    { data: '2020-01-01', datoScelto: 50 },
+    { data: '2020-01-02', datoScelto: 10 },
+    { data: '2020-01-03', datoScelto: 20 },
+    { data: '2020-01-05', datoScelto: 30 },
+    { data: '2020-01-07', datoScelto: 40 },
+    { data: '2020-01-08', datoScelto: 60 },
+    { data: '2020-01-09', datoScelto: 70 },
+    { data: '2020-02-01', datoScelto: 80 },
+    { data: '2020-02-03', datoScelto: 90 },
+  ];
 
   const {
     tooltipData,
@@ -66,7 +77,7 @@ function XYGraph(props) {
 
   const tickFormatter = () => {
     if (periodSelected === "year") {
-      return d => moment(d).format("MMMM/Y");
+      return d => moment(d).format("MMM/Y");
     } else if (periodSelected === "month") {
       return d => moment(d).format("DD/MM/Y");
     } else {
@@ -96,19 +107,22 @@ function XYGraph(props) {
       new Date(startDate) < new Date(d.data) &&
       new Date(endDate) > new Date(d.data)
     ));
-
   }, [dataCovid, startDate, endDate]);
 
-  const xScale = scaleBand({
+  const xScale = scaleTime({
     range: [0, xMax],
     round: true,
-    domain: rangeData.map(d => new Date(d.data)),
+    domain: [
+      Math.min(...rangeData.map(d => new Date(d.data))),
+      Math.max(...rangeData.map(d => new Date(d.data)))
+    ],
   });
 
   const yScale = scaleLinear({
     range: [yMax, 0],
     round: true,
-    domain: [0, Math.max(...dataCovid.map(accessors.yAccessor))],
+    domain: [0, Math.max(...dataCovid.map(d => d.totale_positivi))],
+    nice: true,
   });
 
   return (
@@ -134,83 +148,87 @@ function XYGraph(props) {
         <Group left={margin.left} top={margin.top}
           onMouseMove={e => { handleMouseOver(e) }}
           onMouseOut={e => { hideTooltip(e) }}>
-          <Axis
+          <GridColumns
+            numTicks={numTick(periodSelected)}
+            scale={xScale}
+            width={xMax}
+            height={yMax}
+            stroke="#e0e0e0"
+            strokeOpacity={0.4}
+          />
+          <Axis //Asse Y
             key={"axis-left"}
             orientation="left"
             scale={yScale}
             numTicks={14}
           />
-          <Axis
+          <Axis //Asse X
             key={"axis-bottom"}
             top={yMax}
             orientation="bottom"
-            label="Data"
+            label={`Date Period: ${periodSelected}`}
             scale={xScale}
             numTicks={numTick(periodSelected)}
             tickFormat={tickFormatter(periodSelected)}
           />
-          <text x="-70" y="15" transform="rotate(-90)" fontSize={10}>
+          <text x="-70" y="-20" transform="rotate(-90)" fontSize={10}>
             Numero di Persone
           </text>
-         {/*  <LinePath
-            /*key={"graph"}
+
+          {/* <XYChart
+            key={"graph"}
             width={xMax}
             height={yMax}
             xScale={{ type: "band" }}
             yScale={{ type: "linear" }}
-            data={dataCovid}
-            curve={curveBasis}
-            x={xScale}
-            y={yScale}
-          /> */}
+          >
+ */}
+          {selected.map((sel, i) => {
+            const data = dataCovid.map((datapoint) => ({
+              datoScelto: datapoint[sel],
+              date: datapoint.data,
+            }));
 
-            {selected.map((sel, i) => {
-              const data = dataCovid.map((datapoint) => ({
-                datoScelto: datapoint[sel],
-                date: datapoint.data,
-              }));
+            const filteredData = data.filter(
+              d =>
+                new Date(startDate) < new Date(d.date) &&
+                new Date(endDate) > new Date(d.date),
+            );
+            console.log("filtro",filteredData.map(d => xScale(new Date(d.date).valueOf())));
+            console.log("datoscelto",filteredData.map(d => yScale(d.datoScelto)));
 
-              const filteredData = data.filter(
-                d =>
-                  new Date(startDate) < new Date(d.date) &&
-                  new Date(endDate) > new Date(d.date),
-              );
-              return (
+            return (
                 <LinePath
-                  /*key={"graph"}
-                  width={xMax}
-                  height={yMax}
-                  xScale={{ type: "band" }}
-                  yScale={{ type: "linear" }} */
+                  stroke={DATA_COLORS[sel]}
                   data={filteredData}
+                  key={`Line ${i}`}
                   curve={curveBasis}
-                  x={xScale}
-                  y={yScale}
+                  x={d => xScale(new Date(d.date).valueOf())}
+                  y={d => yScale(d.datoScelto)}
                 />
-                  /* <AnimatedLineSeries
-                    stroke={DATA_COLORS[sel]}
-                    data={filteredData}
-                    dataKey={`Line ${i}`}
-                    curve={curveBasis}
-                    x={xScale}
-                    y={yScale}
-                  /> */
-              );
-            })}
+              /*  <AnimatedLineSeries
+               stroke = {DATA_COLORS[sel]}
+               data = {filteredData}
+               dataKey = {`Line ${i}`}
+               {...accessors}
+               /> */
+            );
+          })}
+          {/* </XYChart> */}
         </Group>
       </ScaleSVG>
 
-        {
-          tooltipOpen && (
-            <TooltipInPortal
-              key={Math.random()}
-              top={tooltipTop}
-              left={tooltipLeft}
-            >
-              <div> Persone: <strong> {tooltipData} </strong></div>
-            </TooltipInPortal>
-          )
-        }
+      {
+        tooltipOpen && (
+          <TooltipInPortal
+            key={Math.random()}
+            top={tooltipTop}
+            left={tooltipLeft}
+          >
+            <div> Persone: <strong> {tooltipData} </strong></div>
+          </TooltipInPortal>
+        )
+      }
     </div >
   );
 }
