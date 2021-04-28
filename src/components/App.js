@@ -21,10 +21,8 @@ import { CHECKBOX_DATA } from './AppConfig';
 export default function CheckboxesGroup() {
   const moment = require("moment");
   const m = moment();
-
   const firstStart = moment(m).startOf("year").format("LLL");
   const firstEnd = moment(m).endOf("year").format("LLL");
-
   const [selectedGraphs, setSelectedGraphs] = React.useState(["totale_positivi"]);
   const [datesInterval, setDatesInterval] = React.useState([firstStart, firstEnd]);
   const [period, setPeriod] = React.useState('year');

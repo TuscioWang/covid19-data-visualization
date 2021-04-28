@@ -1,18 +1,11 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import {
-  //AnimatedAxis,
-  AnimatedLineSeries,
-  XYChart,
-  Grid,
-} from '@visx/xychart';
 import { ScaleSVG } from '@visx/responsive';
 import { RadialGradient, LinearGradient } from '@visx/gradient';
 import { Axis } from '@visx/axis';
 import { scaleLinear, scaleBand, scaleTime } from '@visx/scale';
-//import { GridColumns, Grid } from '@visx/grid';
 import { DATA_COLORS } from './AppConfig';
 import { Group } from '@visx/group';
-import { useTooltip, useTooltipInPortal, TooltipWithBounds } from '@visx/tooltip';
+import { useTooltip, useTooltipInPortal, TooltipWithBounds} from '@visx/tooltip';
 import { localPoint } from '@visx/event';
 import { curveBasis, curveCardinal } from '@visx/curve';
 import { GridRows, GridColumns } from '@visx/grid';
@@ -30,18 +23,23 @@ function XYGraph(props) {
   const yMax = height - margin.top - margin.bottom;
   const [dataCovid, setData] = useState([]);
 
-  const dataBase = [
-    { data: '2020-01-01', datoScelto: 50 },
-    { data: '2020-01-02', datoScelto: 10 },
-    { data: '2020-01-03', datoScelto: 20 },
-    { data: '2020-01-05', datoScelto: 30 },
-    { data: '2020-01-07', datoScelto: 40 },
-    { data: '2020-01-08', datoScelto: 60 },
-    { data: '2020-01-09', datoScelto: 70 },
-    { data: '2020-02-01', datoScelto: 80 },
-    { data: '2020-02-03', datoScelto: 90 },
-  ];
+  //Prendo i miei dati e li trasformo in json
+  const getData = async () => {
+    await fetch("/pcm-dpc/COVID-19/master/dati-json/dpc-covid19-ita-andamento-nazionale.json")
+      .then(res => res.json())
+      .then(receivedData => setData(receivedData));
+  }
+  useEffect(() => {
+    getData();
+  }, []);
 
+  //Oggetto che contiene i miei accessors
+  const accessors = {
+    xAccessor: d => d.date,
+    yAccessor: d => d.datoScelto,
+  }
+
+  //Tooltip
   const {
     tooltipData,
     tooltipLeft,
@@ -50,12 +48,10 @@ function XYGraph(props) {
     showTooltip,
     hideTooltip,
   } = useTooltip();
-
-  const { containerRef, TooltipInPortal } = useTooltipInPortal({
+  const { containerRef,TooltipInPortal } = useTooltipInPortal({
     detectBounds: true,
     scroll: true,
   });
-
   const handleMouseOver = (event, datum) => {
     const coords = localPoint(event.target.ownerSVGElement, event);
     showTooltip({
@@ -65,6 +61,7 @@ function XYGraph(props) {
     });
   };
 
+  //Funzioni per il formato dei tick
   const numTick = () => {
     if (periodSelected === "year") {
       return 12;
@@ -74,7 +71,6 @@ function XYGraph(props) {
       return 7;
     }
   }
-
   const tickFormatter = () => {
     if (periodSelected === "year") {
       return d => moment(d).format("MMM/Y");
@@ -85,29 +81,45 @@ function XYGraph(props) {
     }
   }
 
+  //Stampa del periodo di tempo selezionato in console
   useMemo(() => { console.log("START:", startDate, "END:", endDate) }, [startDate, endDate]);
 
-  const getData = async () => {
-    await fetch("/pcm-dpc/COVID-19/master/dati-json/dpc-covid19-ita-andamento-nazionale.json")
-      .then(res => res.json())
-      .then(receivedData => setData(receivedData));
-  }
-
-  useEffect(() => {
-    getData();
-  }, []);
-
-  const accessors = {
-    xAccessor: d => d.date,
-    yAccessor: d => d.datoScelto,
-  }
-
+  //Funzione che mi trova la data del periodo selezionato
   const rangeData = useMemo(() => {
     return (dataCovid.filter((d) =>
       new Date(startDate) < new Date(d.data) &&
       new Date(endDate) > new Date(d.data)
     ));
   }, [dataCovid, startDate, endDate]);
+
+  //Funzione che mi trova gli array contenenti i dati dei checkbox selezionati
+  const arraySel = useMemo(() => {
+    return (selected.map(sel => {
+      return (dataCovid.map((datapoint) => ({
+        datoScelto: datapoint[sel],
+      })));
+    }))
+  }, [selected]);
+
+  /* let numberMax=0;
+  useMemo(()=> {
+    for (let i = 0; i < selected.length; i++) {
+      const currentMax = Math.max(...arraySel[i].map(accessors.yAccessor)
+      );
+      if (currentMax > numberMax)
+        numberMax = currentMax;
+    }
+  }, [selected,arraySel]); */
+
+  //Calcolo per trovare il mio max di tutti i dati che ho selezionato
+  let numberMax = 0;
+  for (let i = 0; i < selected.length; i++) {
+    const currentMax = Math.max(...arraySel[i].map(accessors.yAccessor));
+    if (currentMax > numberMax)
+      numberMax = currentMax;
+  }
+
+
 
   const xScale = scaleTime({
     range: [0, xMax],
@@ -121,13 +133,13 @@ function XYGraph(props) {
   const yScale = scaleLinear({
     range: [yMax, 0],
     round: true,
-    domain: [0, Math.max(...dataCovid.map(d => d.totale_positivi))],
+    domain: [0, numberMax],
     nice: true,
   });
 
   return (
     <div>
-      <ScaleSVG ref={containerRef} width={width} height={height}>
+      <ScaleSVG width={width} height={height}>
         <rect
           x={0}
           y={0}
@@ -141,13 +153,14 @@ function XYGraph(props) {
         <LinearGradient id='linear2' from="green" to="lightgreen" rotate="0" />
         <LinearGradient id='linear3' from="#0937F6" to="#F6C809" rotate="0" />
         <LinearGradient id='linear4' from="black" to="white" rotate="0" />
-        <LinearGradient id='linear5' from="#0E98F1" to="lightblue" rotate="0" />
+        <LinearGradient id='linear5' from="blue" to="#0E98F1" rotate="0" />
         <LinearGradient id='linear6' from="#B55107" to="#F7A040" rotate="0" />
         <LinearGradient id='linear7' from="#FF00B7" to="#FF69D5" rotate="0" />
 
         <Group left={margin.left} top={margin.top}
-          onMouseMove={e => { handleMouseOver(e) }}
-          onMouseOut={e => { hideTooltip(e) }}>
+          onMouseMove={ handleMouseOver }
+          onMouseOut={ hideTooltip}
+          >
           <GridColumns
             numTicks={numTick(periodSelected)}
             scale={xScale}
@@ -160,7 +173,12 @@ function XYGraph(props) {
             key={"axis-left"}
             orientation="left"
             scale={yScale}
-            numTicks={14}
+            numTicks={10}
+            tickLabelProps={() => ({
+              fontSize: 11,
+              textAnchor: 'start',
+              dy: '0.30em',
+            })}
           />
           <Axis //Asse X
             key={"axis-bottom"}
@@ -194,18 +212,16 @@ function XYGraph(props) {
                 new Date(startDate) < new Date(d.date) &&
                 new Date(endDate) > new Date(d.date),
             );
-            console.log("filtro",filteredData.map(d => xScale(new Date(d.date).valueOf())));
-            console.log("datoscelto",filteredData.map(d => yScale(d.datoScelto)));
 
             return (
-                <LinePath
-                  stroke={DATA_COLORS[sel]}
-                  data={filteredData}
-                  key={`Line ${i}`}
-                  curve={curveBasis}
-                  x={d => xScale(new Date(d.date).valueOf())}
-                  y={d => yScale(d.datoScelto)}
-                />
+              <LinePath
+                stroke={DATA_COLORS[sel]}
+                data={filteredData}
+                key={`Line ${i}`}
+                curve={curveBasis}
+                x={d => xScale(new Date(d.date).valueOf())}
+                y={d => yScale(d.datoScelto)}
+              />
               /*  <AnimatedLineSeries
                stroke = {DATA_COLORS[sel]}
                data = {filteredData}
