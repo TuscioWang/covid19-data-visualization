@@ -6,17 +6,16 @@ import FormControl from "@material-ui/core/FormControl";
 import FormGroup from '@material-ui/core/FormGroup';
 import FormLabel from "@material-ui/core/FormLabel";
 import Container from '@material-ui/core/Container';
-//import AreaClosed from "./AreaClosed";
 import Checkbox from '@material-ui/core/Checkbox';
 import XYGraph from "./XYChart";
-//import App from "./Grafico2";
+import Render from "./Grafico2";
 import Button from '@material-ui/core/Button';
 import Select from '@material-ui/core/Select';
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
 import { makeStyles } from '@material-ui/core/styles';
 import { CHECKBOX_DATA } from './AppConfig';
-//import Theshold from "./Grafico2";
+//import AreaClosed from "./AreaClosed";
 
 export default function CheckboxesGroup() {
   const moment = require("moment");
@@ -99,8 +98,8 @@ export default function CheckboxesGroup() {
                   startDate={startDate}
                   endDate={endDate}
                   periodSelected={period}
-                /> 
-                {/* <Theshold /> */}
+                />
+                {/* <Render /> */}
               </Container>
               <Grid container alignItems="center" justify="space-evenly">
                 <Button

@@ -37,3 +37,5 @@ export const DATA_COLORS = {
     tamponi: "url(#linear5)",
     dimessi_guariti: "url(#linear2)",
 };
+
+//Colore circle
