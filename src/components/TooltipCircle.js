@@ -1,10 +1,12 @@
-export default function TooltipCircle({tooltipLeft,tooltipTop}){
-    //Destrutturazione
-    //const {tooltipLeft,tooltipTop} = props;
+export default function TooltipCircle(props) {
 
-    return(
-        <>
-        <circle
+  //Destrutturazione dei props
+  const tooltipLeft = props.tooltipLeft
+  const tooltipTop = props.tooltipTop;
+
+  return (
+    <>
+      <circle
         cx={tooltipLeft}
         cy={tooltipTop + 1}
         r={4}
@@ -24,8 +26,8 @@ export default function TooltipCircle({tooltipLeft,tooltipTop}){
         strokeWidth={2}
         pointerEvents="none"
       />
-      </>
-    );
+    </>
+  );
 
 
 }

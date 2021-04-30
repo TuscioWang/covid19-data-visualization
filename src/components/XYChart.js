@@ -13,6 +13,7 @@ import { LinePath, LineSeries, Line } from '@visx/shape';
 import { XYChart } from '@visx/xychart';
 import TooltipCircle from './TooltipCircle';
 import { bisector } from "d3-array";
+import { yellow } from '@material-ui/core/colors';
 
 function XYGraph(props) {
   const selected = props.selected;
@@ -30,7 +31,8 @@ function XYGraph(props) {
 
   //Tutti i state
   const [dataCovid, setData] = useState([]);
-  const [tooltipPosition, setTooltipPosition] = useState(null);
+  const [tooltipPositionX, setTooltipPositionX] = useState(null);
+  const [tooltipPositionY, setTooltipPositionY] = useState(null);
 
   //Prendo i miei dati e li trasformo in json
   const getDataJson = async () => {
@@ -51,35 +53,45 @@ function XYGraph(props) {
   //Tooltip + Line
   const {
     tooltipData,
-    tooltipLeft,
-    tooltipTop,
+    tooltipLeft = 0,
+    tooltipTop = 0,
+    tooltipOpen,
+    showTooltip,
   } = useTooltip();
+
   const tooltipStyles = {
     ...defaultStyles,
     background: "#3b6978",
     border: "1px solid white",
     color: "white"
   };
-  const { containerRef, TooltipInPortal } = useTooltipInPortal({
+  const { TooltipWithBounds } = useTooltipInPortal({
     detectBounds: true,
     scroll: true,
   });
   const handleMouseOver = (event) => {
     const coords = localPoint(event.target.ownerSVGElement, event);
+    //const cx = moment(xScale.invert(coords.x)).format("MMM/D/Y");
     const x0 = xScale.invert(coords.x);
-    //const index = bisectDate(dataStock, x0, 1);
-    /* const d0 = dataStock[index - 1];
-     const d1 = dataStock[index]; 
-      let d = d0;
-      if (d1 && getDate(d1)) {
-       d =
-         x0.valueOf() - getDate(d0).valueOf() >
-           getDate(d1).valueOf() - x0.valueOf()
-           ? d1
-           : d0;
-     }  */
-    setTooltipPosition(x0);
+    const y0 = Math.floor(yScale.invert(coords.y));
+    const index= bisectDate(dataCovid,x0,1);
+    const d0 = dataCovid[index - 1];
+    const d1 = dataCovid[index];
+    const d= x0 - xScale(d0.data) > xScale(d1.data) - x0 ? d1 : d0;
+
+    console.log("SONO QUA",yScale(d.datoScelto) );
+
+    showTooltip({
+      tooltipLeft: coords.x,
+      tooltipTop: yScale(d.selected),
+      tooltipData: d,
+    })
+
+    setTooltipPositionX(x0); //tooltipPositionX
+    setTooltipPositionY(y0); //tooltipPositionY
   };
+
+  
 
   //Funzioni per il formato dei tick
   const numTick = () => {
@@ -151,9 +163,16 @@ function XYGraph(props) {
   });
 
 
+/* 
+  console.log("Sono qua",tooltipLeft,tooltipTop);
+  const posX = tooltipPositionX;
+  const posY = tooltipPositionY;
+
+  console.log("X:",posX,"Y:",posY); */
+
   return (
     <div>
-      <ScaleSVG ref={containerRef} width={width} height={height}>
+      <ScaleSVG width={width} height={height}>
         <rect
           x={0}
           y={0}
@@ -175,7 +194,7 @@ function XYGraph(props) {
           onMouseMove={handleMouseOver}
           onTouchMove={handleMouseOver}
           onTouchStart={handleMouseOver}
-          onMouseOut={() => setTooltipPosition(null)}
+          onMouseOut={() => setTooltipPositionX(null)}
         >
           <GridColumns //Griglia delle colonne
             numTicks={numTick(periodSelected)}
@@ -241,7 +260,7 @@ function XYGraph(props) {
               );
             })}
 
-            {tooltipData && (
+            {tooltipOpen && (
               <g>
                 <Line
                   from={{ x: tooltipLeft, y: 0 }}
@@ -251,7 +270,7 @@ function XYGraph(props) {
                   pointerEvents="none"
                   strokeDasharray="5,2"
                 />
-                <TooltipCircle tooltipLeft={tooltipLeft} tooltipTop={tooltipTop} />
+                <TooltipCircle tooltipLeft={tooltipPositionX} tooltipTop={tooltipPositionY} />
               </g>
             )}
           </XYChart>
@@ -267,7 +286,7 @@ function XYGraph(props) {
               left={tooltipLeft + 12}
               style={tooltipStyles}
             >
-              Numero: {d => d.datoScelto(tooltipData)}
+              Numero:
             </TooltipWithBounds>
             <Tooltip
               top={yMax + margin.top - 14}
@@ -279,7 +298,7 @@ function XYGraph(props) {
                 transform: "translateX(-50%)"
               }}
             >
-              Data: {d => d.data(tooltipData)}
+              Data: {moment(getDate(tooltipData)).format("MMM/D/Y")}
             </Tooltip>
           </div>
         )
