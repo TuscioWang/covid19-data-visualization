@@ -6,59 +6,36 @@ import FormControl from "@material-ui/core/FormControl";
 import FormGroup from '@material-ui/core/FormGroup';
 import FormLabel from "@material-ui/core/FormLabel";
 import Container from '@material-ui/core/Container';
-//import AreaClosed from "./AreaClosed";
 import Checkbox from '@material-ui/core/Checkbox';
 import XYGraph from "./XYChart";
 import Button from '@material-ui/core/Button';
 import Select from '@material-ui/core/Select';
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
-import moment from "moment";
 import { makeStyles } from '@material-ui/core/styles';
-
-const CHECKBOX_DATA = {
-  totale_positivi: {
-    label : "Positivi",
-  },
-  ricoverati_con_sintomi: {
-    label : "Ricoverati con sintomi",
-    
-  },
-  isolamento_domiciliare: {
-    label : "Quarantena",
-  },
-  deceduti: {
-    label : "Decessi",
-    
-  },
-  terapia_intensiva: {
-    label : "In Terapia",
-  },
-  tamponi: {
-   label : "Tamponati",
-  },
-  dimessi_guariti: {
-    label: "Guariti",
-  },
-}
+import { CHECKBOX_DATA } from './AppConfig';
+//import AreaClosed from "./AreaClosed";
 
 export default function CheckboxesGroup() {
+  const moment = require("moment");
+  const m = moment();
+  const firstStart = moment(m).startOf("year").format("LLL");
+  const firstEnd = moment(m).endOf("year").format("LLL");
   const [selectedGraphs, setSelectedGraphs] = React.useState(["totale_positivi"]);
-  const [datesInterval, setDatesInterval] = React.useState([]);
+  const [datesInterval, setDatesInterval] = React.useState([firstStart, firstEnd]);
   const [period, setPeriod] = React.useState('year');
   const [shift, setShift] = React.useState(0);
-  const moment = require("moment");
-
-  const m = moment();
 
   const useStyles = makeStyles((theme) => ({
     formControl: {
       margin: theme.spacing(1),
-      minWidth: 100,
+      minWidth: 150,
     },
   }));
   const classes = useStyles();
 
+
+  //Funzione che mi aggiorna l'array contenenti il grafico selezionato
   const handleChange = (event) => {
     const checked = event.target.checked;
     const graph = event.target.value;
@@ -74,29 +51,28 @@ export default function CheckboxesGroup() {
     let startDate;
     let endDate;
     if (period === "week") {
-      startDate = moment(m).startOf("week").add(shift, "W").format();
-      endDate = moment(m).endOf("week").add(shift, "weeks").format();
+      startDate = moment(m).startOf("week").add(shift, "W").format("LLL");
+      endDate = moment(m).endOf("week").add(shift, "weeks").format("LLL");
 
     } else if (period === "month") {
-      startDate = moment(m).startOf("month").add(shift, "M").format();
-      endDate = moment(m).endOf("month").add(shift, "M").format();
+      startDate = moment(m).startOf("month").add(shift, "M").format("LLL");
+      endDate = moment(m).endOf("month").add(shift, "M").format("LLL");
     }
     else {
-      startDate = moment(m).startOf("year").add(shift, "y").format();
-      endDate = moment(m).endOf("year").add(shift, "y").format();
+      startDate = moment(m).startOf("year").add(shift, "y").format("LLL");
+      endDate = moment(m).endOf("year").add(shift, "y").format("LLL");
     }
-
     setDatesInterval([startDate, endDate]);
   }
 
-  //prende il periodo selezionato
+  //Prende il periodo selezionato
   const handlePeriod = (event) => {
     const period = event.target.value;
     setPeriod(period);
     updateStartEndDates(period, shift);
   }
 
-  //fa lo schift rispetto al momento in cui sono nel tempo
+  //Fa lo schift rispetto al momento in cui sono nel tempo
   const handleClick = (event) => {
     const value = parseInt(event.currentTarget.value);
     const newShift = shift + value;
@@ -120,12 +96,14 @@ export default function CheckboxesGroup() {
                   selected={selectedGraphs}
                   startDate={startDate}
                   endDate={endDate}
+                  periodSelected={period}
                 />
+                {/* <Render /> */}
               </Container>
               <Grid container alignItems="center" justify="space-evenly">
                 <Button
                   variant="contained"
-                  color="secondary"
+                  color="primary"
                   value={-1}
                   onClick={handleClick}
                 >
@@ -148,7 +126,7 @@ export default function CheckboxesGroup() {
 
                 <Button
                   variant="contained"
-                  color="secondary"
+                  color="primary"
                   value={1}
                   onClick={handleClick}
                 >
@@ -168,10 +146,15 @@ export default function CheckboxesGroup() {
                   value={selectedGraphs}
                   onChange={handleChange}
                 >
-                  {Object.keys(CHECKBOX_DATA).map((key, index) => 
+                  {Object.keys(CHECKBOX_DATA).map((key, index) =>
                     <FormControlLabel
                       value={key}
-                      control={<Checkbox defaultChecked={index === 0} />}
+                      key={key}
+                      control={
+                        <Checkbox defaultChecked={(index === 0) ? true : false}
+                          color={CHECKBOX_DATA[key].color}
+                        />
+                      }
                       label={CHECKBOX_DATA[key].label}
                     />
                   )}

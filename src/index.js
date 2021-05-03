@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import reportWebVitals from './reportWebVitals';
 import App from './components/App';
+//import Render from './components/App';
 //import { ParentSize } from '@visx/responsive';
 
 

@@ -1,110 +1,315 @@
-import React from 'react';
-import {
-  //AnimatedAxis,
-  //AnimatedGrid,
-  AnimatedLineSeries,
-  XYChart,
-  AnimatedAxis,
-  //Tooltip,
-} from '@visx/xychart';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { ScaleSVG } from '@visx/responsive';
 import { RadialGradient, LinearGradient } from '@visx/gradient';
-import { AxisBottom, AxisLeft } from '@visx/axis';
-import { scaleLinear, scaleBand } from '@visx/scale';
-
-const json = require('../data/andamento-nazionale.json');
-
-const DATA_COLORS = {
-  totale_positivi: "red",
-  ricoverati_con_sintomi: "blue",
-  isolamento_domiciliare: "url(#linear)",
-  deceduti: "",
-  terapia_intensiva: "",
-  tamponi: "",
-  dimessi_guariti: "",
-}
+import { Axis } from '@visx/axis';
+import { scaleLinear, scaleBand, scaleTime } from '@visx/scale';
+import { DATA_COLORS } from './AppConfig';
+import { Group } from '@visx/group';
+import { useTooltip, useTooltipInPortal, TooltipInPortal, withTooltip, Tooltip, TooltipWithBounds, defaultStyles } from '@visx/tooltip';
+import { localPoint } from '@visx/event';
+import { curveBasis, curveCardinal } from '@visx/curve';
+import { GridRows, GridColumns } from '@visx/grid';
+import { LinePath, LineSeries, Line } from '@visx/shape';
+import { XYChart } from '@visx/xychart';
+import TooltipCircle from './TooltipCircle';
+import { bisector } from "d3-array";
 
 function XYGraph(props) {
-
   const selected = props.selected;
   const startDate = props.startDate;
   const endDate = props.endDate;
-
-  console.log("START:", startDate, "END:", endDate);
-
+  const periodSelected = props.periodSelected;
+  const moment = require("moment");
   const width = 900;
   const height = 500;
-  const margin = { top: 30, bottom: 20, left: 20, right:20 };
-
+  const margin = { top: 40, bottom: 50, left: 40, right: 30 };
   const xMax = width - margin.left - margin.right;
   const yMax = height - margin.top - margin.bottom;
+  const getDate = d => new Date(d.data);
+  //const bisectDate = bisector((d) => new Date(d.data)).left;
 
+  //Tutti i state
+  const [dataCovid, setData] = useState([]);
+  const [tooltipPosition, setTooltipPosition] = useState(null);
+  const [tooltipPositionY, setTooltipPositionY] = useState(null);
+
+  //Prendo i miei dati e li trasformo in json
+  const getDataJson = async () => {
+    await fetch("https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-json/dpc-covid19-ita-andamento-nazionale.json")
+      .then(res => res.json())
+      .then(receivedData => setData(receivedData));
+  }
+  useEffect(() => {
+    getDataJson();
+  }, []);
+
+  //Oggetto che contiene i miei accessors
   const accessors = {
     xAccessor: d => d.date,
     yAccessor: d => d.datoScelto,
   }
 
+  //Tooltip + Line
+  const {
+    tooltipOpen,
+    showTooltip,
+    hideTooltip,
+  } = useTooltip();
+
+  const tooltipStyles = {
+    ...defaultStyles,
+    background: "#3b6978",
+    border: "1px solid white",
+    color: "white"
+  };
+  const { containerRef, TooltipInPortal } = useTooltipInPortal({
+    detectBounds: true,
+    scroll: true,
+  });
+  const handleMouseOver = (event) => {
+    const coords = localPoint(event.target.ownerSVGElement, event);
+    //const cx = moment(xScale.invert(coords.x)).format("MMM/D/Y");
+    const x0 = xScale.invert(coords.x);
+    const y0 = Math.floor(yScale.invert(coords.y));
+
+
+    setTooltipPosition(x0); //Valore contenuto (data) di questa coordinata
+    //setTooltipPositionY(y0); //Valore contenuto (numero) di questa coordinata
+  };
+
+
+  //Funzioni per il formato dei tick
+  const numTick = () => {
+    if (periodSelected === "year") {
+      return 12;
+    } else if (periodSelected === "month") {
+      return 9;
+    } else {
+      return 7;
+    }
+  }
+  const tickFormatter = () => {
+    if (periodSelected === "year") {
+      return d => moment(d).format("MMM/Y");
+    } else if (periodSelected === "month") {
+      return d => moment(d).format("DD/MM/Y");
+    } else {
+      return d => moment(d).format("ddd/MM/Y");
+    }
+  }
+
+  //Stampa del periodo di tempo selezionato in console
+  useMemo(() => {
+    console.log("START:", startDate, "END:", endDate)
+  }, [startDate, endDate]);
+
+  //Funzione che mi trova la data del periodo selezionato
+  const rangeData = useMemo(() => {
+    return (dataCovid.filter((d) =>
+      new Date(startDate) < new Date(d.data) &&
+      new Date(endDate) > new Date(d.data)
+    ));
+  }, [dataCovid, startDate, endDate]);
+
+  //Funzione che mi trova gli array contenenti i dati dei checkbox selezionati
+  const arraySel = useMemo(() => {
+    return (selected.map(sel => {
+      return (dataCovid.map((datapoint) => ({
+        datoScelto: datapoint[sel],
+      })));
+    }))
+  }, [selected, dataCovid]);
+
+  //Calcolo per trovare il mio max di tutti i dati che ho selezionato
+  const numberMax = useMemo(() => {
+    let Max = 0;
+    for (let i = 0; i < selected.length; i++) {
+      const currentMax = Math.max(...arraySel[i].map(accessors.yAccessor));
+      if (currentMax > Max)
+        Max = currentMax;
+    }
+    return Max;
+  }, [selected, arraySel]);
+
+  //Calcolo degli scale x e y
+  const xScale = scaleTime({
+    range: [0, xMax],
+    round: true,
+    domain: [
+      Math.min(...rangeData.map(d => new Date(d.data))),
+      Math.max(...rangeData.map(d => new Date(d.data)))
+    ],
+  });
+  const yScale = scaleLinear({
+    range: [yMax, 0],
+    round: true,
+    domain: [0, numberMax],
+    nice: true,
+  });
+
+  //console.log("Sono qua",tooltipLeft,tooltipTop);
+
+  const posX = xScale(tooltipPosition);
+  //const posY = yScale(tooltipPositionY);
+  const tooltipDataPoint = dataCovid.find(d => {
+    return(
+      moment(tooltipPosition).isSame(moment(d.data),'day') &&
+      moment(tooltipPosition).isSame(moment(d.data),'year') &&
+      moment(tooltipPosition).isSame(moment(d.data),'week')
+    );
+  });
+
+  const posY = () => {
+    for( let i = 0; i < selected.length; i++){
+      const pixel = yScale(tooltipDataPoint.selected[i])
+      if(pixel === undefined)
+        console.log("Sei uscito fuori dal range");
+    }
+  }
+  console.log(posY()); 
+
   return (
-    <ScaleSVG width={width} height={height}>
-      <rect
-        x={0}
-        y={0}
-        width={width}
-        height={height}
-        fill="url(#radial)"
-        rx={14}
-      />
-      <RadialGradient id='radial' from="#b3ecff" to="#0a8075" r="90%" />
-      <LinearGradient id='linear' from="red" to="yellow" rotate="0" />
+    <div>
+      <ScaleSVG ref={containerRef} width={width} height={height}>
+        <rect
+          x={0}
+          y={0}
+          width={width}
+          height={height}
+          fill="url(#radial)"
+          rx={14}
+        />
+        <RadialGradient id='radial' from="#b3ecff" to="#0a8075" r="90%" />
+        <LinearGradient id='linear1' from="red" to="yellow" rotate="0" />
+        <LinearGradient id='linear2' from="green" to="lightgreen" rotate="0" />
+        <LinearGradient id='linear3' from="#0937F6" to="#F6C809" rotate="0" />
+        <LinearGradient id='linear4' from="black" to="white" rotate="0" />
+        <LinearGradient id='linear5' from="blue" to="#0E98F1" rotate="0" />
+        <LinearGradient id='linear6' from="#B55107" to="#F7A040" rotate="0" />
+        <LinearGradient id='linear7' from="#FF00B7" to="#FF69D5" rotate="0" />
 
-      {selected.map(sel => {
+        <Group left={margin.left} top={margin.top}
+          onMouseMove={handleMouseOver}
+          onTouchMove={handleMouseOver}
+          onTouchStart={handleMouseOver}
+          onMouseOut={() => hideTooltip()}
+        >
+          <GridColumns //Griglia delle colonne
+            numTicks={numTick(periodSelected)}
+            scale={xScale}
+            width={xMax}
+            height={yMax}
+            stroke="#e0e0e0"
+            strokeOpacity={0.4}
+          />
+          <Axis //Asse Y
+            key={"axis-left"}
+            orientation="left"
+            scale={yScale}
+            numTicks={10}
+            tickLabelProps={() => ({
+              fontSize: 11,
+              textAnchor: 'start',
+              dy: '0.30em',
+            })}
+          />
+          <Axis //Asse X
+            key={"axis-bottom"}
+            top={yMax}
+            orientation="bottom"
+            label={`Date Period: ${periodSelected}`}
+            scale={xScale}
+            numTicks={numTick(periodSelected)}
+            tickFormat={tickFormatter(periodSelected)}
+          />
+          <text x="-70" y="-20" transform="rotate(-90)" fontSize={10}>
+            Numero di Persone
+          </text>
 
-        const data = json.map((datapoint) => ({
-          datoScelto: datapoint[sel],
-          date: datapoint.data,
-        }));
-
-        const filteredData = data.filter(
-          d =>
-            new Date(startDate) < new Date(d.date) &&
-            new Date(endDate) > new Date(d.date),
-        );
-
-       /*  const xScale = scaleBand({
-          range: [0, xMax],
-          round: true,
-          domain: data.map(x),
-        }); 
-*/
-        const yScale = scaleLinear({
-          range: [yMax, 0],
-          round: true,
-          domain: [0, Math.max(...data.map(d => d.datoScelto))],
-        });
- 
-        return (
           <XYChart
-            width={width}
-            height={height}
-            xScale={{type: "band"}}
-            yScale={{type: "linear"}}
+            key={"graph"}
+            width={xMax}
+            height={yMax}
+            xScale={{ type: "band" }}
+            yScale={{ type: "linear" }}
+
           >
-            <AnimatedLineSeries
-              stroke={DATA_COLORS[sel]}
-              dataKey="Line 1"
-              data={filteredData}
-              {...accessors}
-            />
+            {selected.map((sel, i) => {
+              const data = dataCovid.map((datapoint) => ({
+                datoScelto: datapoint[sel],
+                date: datapoint.data,
+              }));
+
+              const filteredData = data.filter(
+                d =>
+                  new Date(startDate) < new Date(d.date) &&
+                  new Date(endDate) > new Date(d.date),
+              );
+
+              return (
+                <LinePath
+                  stroke={DATA_COLORS[sel]}
+                  data={filteredData}
+                  key={`Line ${i}`}
+                  curve={curveBasis}
+                  x={d => xScale(new Date(d.date).valueOf())}
+                  y={d => yScale(d.datoScelto)}
+                />
+              );
+            })}
+
+            {tooltipOpen && (
+              <g>
+                <Line
+                  from={{ x: posX, y: 0}}
+                  to={{ x: posX, y: yMax}}
+                  stroke="yellow"
+                  strokeWidth={1}
+                  pointerEvents="none"
+                  strokeDasharray="5,2"
+                />s
+                {
+                  selected.map((sel,index) => {
+                    const tooltipSelPixel= yScale(tooltipDataPoint[sel]);
+                    return(
+                      <TooltipCircle key={`circle ${index}`} tooltipLeft={posX} tooltipTop={tooltipSelPixel} />
+                    );
+                  })
+                  }
+              </g>
+            )}
           </XYChart>
-        );
+        </Group>
+      </ScaleSVG>
 
-        /*  <AxisBottom
-           scale={xScale}
-           stroke="black"
-         /> */
-
-      })}
-    </ScaleSVG>
+      {
+        tooltipOpen && (
+          <div>
+            <TooltipInPortal
+              key={Math.random()}
+              top={posY - 12}
+              left={posX + 12}
+              style={tooltipStyles}
+            >
+              {selected.map()}
+              Number: {tooltipDataPoint}
+            </TooltipInPortal>
+            <Tooltip
+              top={yMax + margin.top}
+              left={posX}
+              style={{
+                ...defaultStyles,
+                minWidth: 72,
+                textAlign: "center",
+                transform: "translateX(-50%)"
+              }}
+            >
+              Date: {tooltipPosition}
+            </Tooltip>
+          </div>
+        )
+      }
+    </div >
   );
 }
 export default XYGraph;
