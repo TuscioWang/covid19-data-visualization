@@ -8,6 +8,7 @@ import FormLabel from "@material-ui/core/FormLabel";
 import Container from '@material-ui/core/Container';
 import Checkbox from '@material-ui/core/Checkbox';
 import XYGraph from "./XYChart";
+import Render from "./Grafico2";
 import Button from '@material-ui/core/Button';
 import Select from '@material-ui/core/Select';
 import InputLabel from '@material-ui/core/InputLabel';
