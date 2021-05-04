@@ -2,18 +2,17 @@ import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { ScaleSVG } from '@visx/responsive';
 import { RadialGradient, LinearGradient } from '@visx/gradient';
 import { Axis } from '@visx/axis';
-import { scaleLinear, scaleBand, scaleTime } from '@visx/scale';
+import { scaleLinear, scaleQuantile, scaleTime } from '@visx/scale';
 import { DATA_COLORS } from './AppConfig';
 import { Group } from '@visx/group';
 import { useTooltip, useTooltipInPortal, TooltipInPortal, withTooltip, Tooltip, TooltipWithBounds, defaultStyles } from '@visx/tooltip';
 import { localPoint } from '@visx/event';
-import { curveBasis, curveCardinal } from '@visx/curve';
+import { curveBasis } from '@visx/curve';
 import { GridRows, GridColumns } from '@visx/grid';
 import { LinePath, LineSeries, Line } from '@visx/shape';
 import { XYChart } from '@visx/xychart';
 import TooltipCircle from './TooltipCircle';
-import { bisector } from "d3-array";
-import { yellow } from '@material-ui/core/colors';
+import { LegendDemo, LegendQuantile, LegendItem, LegendLabel } from '@visx/legend';
 
 function XYGraph(props) {
   const selected = props.selected;
@@ -27,16 +26,16 @@ function XYGraph(props) {
   const xMax = width - margin.left - margin.right;
   const yMax = height - margin.top - margin.bottom;
   const getDate = d => new Date(d.data);
-  const bisectDate = bisector((d) => new Date(d.data)).left;
+  //const bisectDate = bisector((d) => new Date(d.data)).left;
 
-  //Tutti i state
+  //Tutti gli state
   const [dataCovid, setData] = useState([]);
-  const [tooltipPositionX, setTooltipPositionX] = useState(null);
-  const [tooltipPositionY, setTooltipPositionY] = useState(null);
+  const [tooltipPosition, setTooltipPosition] = useState(null);
+  const showTooltip = tooltipPosition != null;
 
   //Prendo i miei dati e li trasformo in json
   const getDataJson = async () => {
-    await fetch("/pcm-dpc/COVID-19/master/dati-json/dpc-covid19-ita-andamento-nazionale.json")
+    await fetch("https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-json/dpc-covid19-ita-andamento-nazionale.json")
       .then(res => res.json())
       .then(receivedData => setData(receivedData));
   }
@@ -51,47 +50,22 @@ function XYGraph(props) {
   }
 
   //Tooltip + Line
-  const {
-    tooltipData,
-    tooltipLeft = 0,
-    tooltipTop = 0,
-    tooltipOpen,
-    showTooltip,
-  } = useTooltip();
-
   const tooltipStyles = {
     ...defaultStyles,
-    background: "#3b6978",
+    background: "#1F1639",
     border: "1px solid white",
     color: "white"
   };
-  const { TooltipWithBounds } = useTooltipInPortal({
+  const { containerRef, TooltipInPortal } = useTooltipInPortal({
     detectBounds: true,
     scroll: true,
   });
   const handleMouseOver = (event) => {
     const coords = localPoint(event.target.ownerSVGElement, event);
-    //const cx = moment(xScale.invert(coords.x)).format("MMM/D/Y");
-    const x0 = xScale.invert(coords.x);
-    const y0 = Math.floor(yScale.invert(coords.y));
-    const index= bisectDate(dataCovid,x0,1);
-    const d0 = dataCovid[index - 1];
-    const d1 = dataCovid[index];
-    const d= x0 - xScale(d0.data) > xScale(d1.data) - x0 ? d1 : d0;
-
-    console.log("SONO QUA",yScale(d.datoScelto) );
-
-    showTooltip({
-      tooltipLeft: coords.x,
-      tooltipTop: yScale(d.selected),
-      tooltipData: d,
-    })
-
-    setTooltipPositionX(x0); //tooltipPositionX
-    setTooltipPositionY(y0); //tooltipPositionY
+    const x0 = xScale.invert(coords.x - margin.left);
+    setTooltipPosition(x0); //Valore contenuto (data) di questa coordinata
   };
 
-  
 
   //Funzioni per il formato dei tick
   const numTick = () => {
@@ -105,11 +79,11 @@ function XYGraph(props) {
   }
   const tickFormatter = () => {
     if (periodSelected === "year") {
-      return d => moment(d).format("MMM/Y");
+      return d => moment(d).format("MMM YY");
     } else if (periodSelected === "month") {
-      return d => moment(d).format("DD/MM/Y");
+      return d => moment(d).format("DD MMM YY");
     } else {
-      return d => moment(d).format("ddd/MM/Y");
+      return d => moment(d).format("ddd-MM-Y");
     }
   }
 
@@ -146,7 +120,7 @@ function XYGraph(props) {
     return Max;
   }, [selected, arraySel]);
 
-  //Calcolo degli scale x e y
+  //Calcolo degli scale x, y e legenda
   const xScale = scaleTime({
     range: [0, xMax],
     round: true,
@@ -155,6 +129,10 @@ function XYGraph(props) {
       Math.max(...rangeData.map(d => new Date(d.data)))
     ],
   });
+  const quantileScale = scaleQuantile({
+    domain: ["totale_positivi", ""],
+    range: ['#eb4d70', '#f19938', '#6ce18b', '#78f6ef', '#9096f8'],
+  });
   const yScale = scaleLinear({
     range: [yMax, 0],
     round: true,
@@ -162,39 +140,42 @@ function XYGraph(props) {
     nice: true,
   });
 
+  const tooltipDataPoint = dataCovid.find(d => {
+    return (
+      moment(tooltipPosition).isSame(moment(d.data), 'day') &&
+      moment(tooltipPosition).isSame(moment(d.data), 'year') &&
+      moment(tooltipPosition).isSame(moment(d.data), 'week')
+    );
+  });
 
-/* 
-  console.log("Sono qua",tooltipLeft,tooltipTop);
-  const posX = tooltipPositionX;
-  const posY = tooltipPositionY;
+  const posX = xScale(tooltipPosition);
+  const posY = tooltipDataPoint !== undefined ? yScale(tooltipDataPoint) : null;
 
-  console.log("X:",posX,"Y:",posY); */
-
+  //console.log("X", posX, "Y", posY);
   return (
     <div>
-      <ScaleSVG width={width} height={height}>
+      <ScaleSVG ref={containerRef} width={width} height={height}>
         <rect
           x={0}
           y={0}
           width={width}
           height={height}
-          fill="url(#radial)"
+          fill="#1F1639"
           rx={14}
         />
-        <RadialGradient id='radial' from="#b3ecff" to="#0a8075" r="90%" />
-        <LinearGradient id='linear1' from="red" to="yellow" rotate="0" />
-        <LinearGradient id='linear2' from="green" to="lightgreen" rotate="0" />
-        <LinearGradient id='linear3' from="#0937F6" to="#F6C809" rotate="0" />
-        <LinearGradient id='linear4' from="black" to="white" rotate="0" />
-        <LinearGradient id='linear5' from="blue" to="#0E98F1" rotate="0" />
-        <LinearGradient id='linear6' from="#B55107" to="#F7A040" rotate="0" />
-        <LinearGradient id='linear7' from="#FF00B7" to="#FF69D5" rotate="0" />
+        <LinearGradient id='linear1' from="#91A6FF" to="#91A6FF" rotate="0" />
+        <LinearGradient id='linear2' from="#FF88DC" to="#FF88DC" rotate="0" />
+        <LinearGradient id='linear3' from="#FAFF7F" to="#FAFF7F" rotate="0" />
+        <LinearGradient id='linear4' from="#FFFFFF" to="#FFFFFF" rotate="0" />
+        <LinearGradient id='linear5' from="#FF5154" to="#FF5154" rotate="0" />
+        <LinearGradient id='linear6' from="#086788" to="#086788" rotate="0" />
+        <LinearGradient id='linear7' from="#F79256" to="#F79256" rotate="0" />
 
         <Group left={margin.left} top={margin.top}
           onMouseMove={handleMouseOver}
           onTouchMove={handleMouseOver}
           onTouchStart={handleMouseOver}
-          onMouseOut={() => setTooltipPositionX(null)}
+          onMouseOut={() => setTooltipPosition(null)}
         >
           <GridColumns //Griglia delle colonne
             numTicks={numTick(periodSelected)}
@@ -202,31 +183,37 @@ function XYGraph(props) {
             width={xMax}
             height={yMax}
             stroke="#e0e0e0"
-            strokeOpacity={0.4}
+            strokeOpacity={0.3}
           />
           <Axis //Asse Y
             key={"axis-left"}
             orientation="left"
             scale={yScale}
+            hideAxisLine="true"
             numTicks={10}
+            stroke="#e0e0e0"
             tickLabelProps={() => ({
               fontSize: 11,
-              textAnchor: 'start',
-              dy: '0.30em',
+              textAnchor: 'middle',
+              fill: '#C6B5DE'
             })}
+
           />
           <Axis //Asse X
             key={"axis-bottom"}
             top={yMax}
             orientation="bottom"
-            label={`Date Period: ${periodSelected}`}
             scale={xScale}
+            stroke="#C6B5DE"
             numTicks={numTick(periodSelected)}
+            tickStroke="#C6B5DE"
             tickFormat={tickFormatter(periodSelected)}
+            tickLabelProps={() => ({
+              fontSize: 11,
+              textAnchor: 'middle',
+              fill: '#C6B5DE'
+            })}
           />
-          <text x="-70" y="-20" transform="rotate(-90)" fontSize={10}>
-            Numero di Persone
-          </text>
 
           <XYChart
             key={"graph"}
@@ -253,6 +240,7 @@ function XYGraph(props) {
                   stroke={DATA_COLORS[sel]}
                   data={filteredData}
                   key={`Line ${i}`}
+                  strokeWidth={3}
                   curve={curveBasis}
                   x={d => xScale(new Date(d.date).valueOf())}
                   y={d => yScale(d.datoScelto)}
@@ -260,17 +248,26 @@ function XYGraph(props) {
               );
             })}
 
-            {tooltipOpen && (
+            {showTooltip && (
               <g>
                 <Line
-                  from={{ x: tooltipLeft, y: 0 }}
-                  to={{ x: tooltipLeft, y: yMax }}
+                  from={{ x: posX, y: 0 }}
+                  to={{ x: posX, y: yMax }}
                   stroke="yellow"
                   strokeWidth={1}
                   pointerEvents="none"
                   strokeDasharray="5,2"
                 />
-                <TooltipCircle tooltipLeft={tooltipPositionX} tooltipTop={tooltipPositionY} />
+
+                {
+                  selected.map(index => {
+                    const posY = (tooltipDataPoint !== undefined) ? yScale(tooltipDataPoint[index]) : null;
+                    return (
+                      <TooltipCircle tooltipLeft={posX} tooltipTop={posY} />
+                    );
+                  })
+                }
+                )
               </g>
             )}
           </XYChart>
@@ -278,28 +275,26 @@ function XYGraph(props) {
       </ScaleSVG>
 
       {
-        tooltipData && (
+        showTooltip && (
           <div>
-            <TooltipWithBounds
+            <TooltipInPortal
               key={Math.random()}
-              top={tooltipTop - 12}
-              left={tooltipLeft + 12}
+              top={yMax}
+              left={posX}
               style={tooltipStyles}
             >
-              Numero:
-            </TooltipWithBounds>
-            <Tooltip
-              top={yMax + margin.top - 14}
-              left={tooltipLeft}
-              style={{
-                ...defaultStyles,
-                minWidth: 72,
-                textAlign: "center",
-                transform: "translateX(-50%)"
-              }}
-            >
-              Data: {moment(getDate(tooltipData)).format("MMM/D/Y")}
-            </Tooltip>
+              {selected.map((item) => {
+                return(
+                  <p className={'tooltipCSS'}>
+                    {item}: {(tooltipDataPoint !== undefined) ? (tooltipDataPoint[item]) : null}
+                  </p>
+                )
+              })}
+              <p className={'tooltipCSS'}>
+                Date: {(tooltipDataPoint !== undefined) ? moment(tooltipDataPoint.data).format("DD/MM/Y") : null}
+              </p>
+
+            </TooltipInPortal>
           </div>
         )
       }

@@ -29,13 +29,11 @@ export const CHECKBOX_DATA = {
     },
 };
 export const DATA_COLORS = {
-    totale_positivi: "url(#linear1)",
-    ricoverati_con_sintomi: "url(#linear7)",
-    isolamento_domiciliare: "url(#linear6)",
-    deceduti: "url(#linear4)",
-    terapia_intensiva: "url(#linear3)",
-    tamponi: "url(#linear5)",
-    dimessi_guariti: "url(#linear2)",
+    totale_positivi: "#91A6FF",
+    ricoverati_con_sintomi: "#F79256",
+    isolamento_domiciliare: "#086788",
+    deceduti: "#FFFFFF",
+    terapia_intensiva: "#FAFF7F",
+    tamponi: "#FF5154",
+    dimessi_guariti: "#FF88DC",
 };
-
-//Colore circle

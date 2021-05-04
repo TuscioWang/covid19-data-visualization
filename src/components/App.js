@@ -92,7 +92,7 @@ export default function CheckboxesGroup() {
           <Grid item md={9} >
             <Container className="generale">
               <Container className="graphCss">
-                <h1> GRAFICO COVID 2020-2021 </h1>
+                <h1> Grafico Covid 2020-2021 </h1>
                 <XYGraph
                   selected={selectedGraphs}
                   startDate={startDate}
