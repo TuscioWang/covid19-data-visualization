@@ -2,11 +2,7 @@
   "name": "covid19-data-visualization",
   "version": "0.1.0",
   "private": true,
-<<<<<<< HEAD
   "proxy": "https://raw.githubusercontent.com/",
-=======
-  "proxy": "https://raw.githubusercontent.com",
->>>>>>> 53355d2e0fec912732f4eab12fc92d2463a385c3
   "dependencies": {
     "@material-ui/core": "^4.11.3",
     "@material-ui/icons": "^4.11.2",
@@ -24,10 +20,6 @@
     "@visx/responsive": "^1.7.0",
     "@visx/scale": "^1.7.0",
     "@visx/shape": "^1.8.0",
-<<<<<<< HEAD
-=======
-    "@visx/threshold": "^1.8.0",
->>>>>>> 53355d2e0fec912732f4eab12fc92d2463a385c3
     "@visx/tooltip": "^1.7.2",
     "@visx/visx": "^1.7.3",
     "@visx/xychart": "^1.7.3",
