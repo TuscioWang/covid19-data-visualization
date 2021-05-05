@@ -29,11 +29,11 @@ export const CHECKBOX_DATA = {
     },
 };
 export const DATA_COLORS = {
-    totale_positivi: "#91A6FF",
+    totale_positivi: "#FF5154",
     ricoverati_con_sintomi: "#F79256",
     isolamento_domiciliare: "#086788",
-    deceduti: "#FFFFFF",
+    deceduti: "#09c647",
     terapia_intensiva: "#FAFF7F",
-    tamponi: "#FF5154",
-    dimessi_guariti: "#FF88DC",
+    tamponi: "#FF88DC",
+    dimessi_guariti: "#91A6FF",
 };

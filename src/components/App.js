@@ -8,13 +8,13 @@ import FormLabel from "@material-ui/core/FormLabel";
 import Container from '@material-ui/core/Container';
 import Checkbox from '@material-ui/core/Checkbox';
 import XYGraph from "./XYChart";
-import Render from "./Grafico2";
 import Button from '@material-ui/core/Button';
 import Select from '@material-ui/core/Select';
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
 import { makeStyles } from '@material-ui/core/styles';
-import { CHECKBOX_DATA } from './AppConfig';
+import { CHECKBOX_DATA, BETTER_SEL } from './AppConfig';
+import Legend from './Legend';
 //import AreaClosed from "./AreaClosed";
 
 export default function CheckboxesGroup() {
@@ -99,7 +99,6 @@ export default function CheckboxesGroup() {
                   endDate={endDate}
                   periodSelected={period}
                 />
-                {/* <Render /> */}
               </Container>
               <Grid container alignItems="center" justify="space-evenly">
                 <Button
@@ -138,9 +137,9 @@ export default function CheckboxesGroup() {
           </Grid>
 
           <Grid item md={3}>
-            <Container style={{ fontSize: "2vw" }} className="legenda">
+            <Container style={{ fontSize: "1vw" }} className="checkboxes">
               <FormControl component="fieldset">
-                <FormLabel component="legend"> Seleziona dati: </FormLabel>
+                <FormLabel component="checkbox"> Seleziona dati: </FormLabel>
                 <FormGroup
                   aria-label="graph"
                   name="graph"
@@ -161,6 +160,7 @@ export default function CheckboxesGroup() {
                   )}
                 </FormGroup>
               </FormControl>
+                <Legend selected={selectedGraphs} />
             </Container>
           </Grid>
         </Grid>

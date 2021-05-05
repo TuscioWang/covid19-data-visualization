@@ -1,18 +1,16 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, useRef, createRef } from 'react';
 import { ScaleSVG } from '@visx/responsive';
-import { RadialGradient, LinearGradient } from '@visx/gradient';
 import { Axis } from '@visx/axis';
 import { scaleLinear, scaleQuantile, scaleTime } from '@visx/scale';
-import { DATA_COLORS } from './AppConfig';
+import { DATA_COLORS, CHECKBOX_DATA } from './AppConfig';
 import { Group } from '@visx/group';
-import { useTooltip, useTooltipInPortal, TooltipInPortal, withTooltip, Tooltip, TooltipWithBounds, defaultStyles } from '@visx/tooltip';
+import { useTooltipInPortal, TooltipWithBounds, Tooltip, defaultStyles } from '@visx/tooltip';
 import { localPoint } from '@visx/event';
 import { curveBasis } from '@visx/curve';
 import { GridRows, GridColumns } from '@visx/grid';
 import { LinePath, LineSeries, Line } from '@visx/shape';
 import { XYChart } from '@visx/xychart';
 import TooltipCircle from './TooltipCircle';
-import { LegendDemo, LegendQuantile, LegendItem, LegendLabel } from '@visx/legend';
 
 function XYGraph(props) {
   const selected = props.selected;
@@ -25,13 +23,13 @@ function XYGraph(props) {
   const margin = { top: 40, bottom: 50, left: 40, right: 30 };
   const xMax = width - margin.left - margin.right;
   const yMax = height - margin.top - margin.bottom;
-  const getDate = d => new Date(d.data);
-  //const bisectDate = bisector((d) => new Date(d.data)).left;
 
   //Tutti gli state
   const [dataCovid, setData] = useState([]);
-  const [tooltipPosition, setTooltipPosition] = useState(null);
-  const showTooltip = tooltipPosition != null;
+  const [tooltipValueX, setTooltipValueX] = useState(null);
+  const [tooltipValueY, setTooltipValueY] = useState(null);
+  const SVGref = createRef();
+  const showTooltip = tooltipValueX != null;
 
   //Prendo i miei dati e li trasformo in json
   const getDataJson = async () => {
@@ -43,6 +41,9 @@ function XYGraph(props) {
     getDataJson();
   }, []);
 
+  useEffect(() => {
+    console.log(SVGref);
+  });
   //Oggetto che contiene i miei accessors
   const accessors = {
     xAccessor: d => d.date,
@@ -52,18 +53,23 @@ function XYGraph(props) {
   //Tooltip + Line
   const tooltipStyles = {
     ...defaultStyles,
-    background: "#1F1639",
+    background: "#34467d",
     border: "1px solid white",
-    color: "white"
+    color: "white",
+    paddingTop: 0,
+    paddingBottom: 0,
+    position: "absolute",
   };
-  const { containerRef, TooltipInPortal } = useTooltipInPortal({
+  /* const {To } = useTooltipWithBound({
     detectBounds: true,
     scroll: true,
-  });
+  }); */
   const handleMouseOver = (event) => {
     const coords = localPoint(event.target.ownerSVGElement, event);
     const x0 = xScale.invert(coords.x - margin.left);
-    setTooltipPosition(x0); //Valore contenuto (data) di questa coordinata
+    const y0 = yScale.invert(coords.y - margin.top);
+    setTooltipValueX(x0); //Valore contenuto (data) di questa coordinata
+    setTooltipValueY(y0); //Valore contenuto (numeri) di questa coordinata
   };
 
 
@@ -129,10 +135,6 @@ function XYGraph(props) {
       Math.max(...rangeData.map(d => new Date(d.data)))
     ],
   });
-  const quantileScale = scaleQuantile({
-    domain: ["totale_positivi", ""],
-    range: ['#eb4d70', '#f19938', '#6ce18b', '#78f6ef', '#9096f8'],
-  });
   const yScale = scaleLinear({
     range: [yMax, 0],
     round: true,
@@ -140,21 +142,24 @@ function XYGraph(props) {
     nice: true,
   });
 
-  const tooltipDataPoint = dataCovid.find(d => {
+  //Estraggo i valori contenuti nelle coordinate
+  const tooltipData = dataCovid.find(d => {
     return (
-      moment(tooltipPosition).isSame(moment(d.data), 'day') &&
-      moment(tooltipPosition).isSame(moment(d.data), 'year') &&
-      moment(tooltipPosition).isSame(moment(d.data), 'week')
+      moment(tooltipValueX).isSame(moment(d.data), 'day') &&
+      moment(tooltipValueX).isSame(moment(d.data), 'year') &&
+      moment(tooltipValueX).isSame(moment(d.data), 'week')
     );
   });
 
-  const posX = xScale(tooltipPosition);
-  const posY = tooltipDataPoint !== undefined ? yScale(tooltipDataPoint) : null;
+  //Valori in pixel del contenuto
+  const tooltipLeft = xScale(tooltipValueX);
+  const tooltipTop = yScale(tooltipValueY);
 
-  //console.log("X", posX, "Y", posY);
+  console.log("X", tooltipLeft, "Y", tooltipTop);
+
   return (
-    <div>
-      <ScaleSVG ref={containerRef} width={width} height={height}>
+    <div style={{ position: "relative" }}>
+      <ScaleSVG ref={SVGref} width={width} height={height}>
         <rect
           x={0}
           y={0}
@@ -163,19 +168,11 @@ function XYGraph(props) {
           fill="#1F1639"
           rx={14}
         />
-        <LinearGradient id='linear1' from="#91A6FF" to="#91A6FF" rotate="0" />
-        <LinearGradient id='linear2' from="#FF88DC" to="#FF88DC" rotate="0" />
-        <LinearGradient id='linear3' from="#FAFF7F" to="#FAFF7F" rotate="0" />
-        <LinearGradient id='linear4' from="#FFFFFF" to="#FFFFFF" rotate="0" />
-        <LinearGradient id='linear5' from="#FF5154" to="#FF5154" rotate="0" />
-        <LinearGradient id='linear6' from="#086788" to="#086788" rotate="0" />
-        <LinearGradient id='linear7' from="#F79256" to="#F79256" rotate="0" />
-
         <Group left={margin.left} top={margin.top}
           onMouseMove={handleMouseOver}
           onTouchMove={handleMouseOver}
           onTouchStart={handleMouseOver}
-          onMouseOut={() => setTooltipPosition(null)}
+        //onMouseOut={() => setTooltipValueX(null)}
         >
           <GridColumns //Griglia delle colonne
             numTicks={numTick(periodSelected)}
@@ -214,14 +211,12 @@ function XYGraph(props) {
               fill: '#C6B5DE'
             })}
           />
-
           <XYChart
             key={"graph"}
             width={xMax}
             height={yMax}
             xScale={{ type: "band" }}
             yScale={{ type: "linear" }}
-
           >
             {selected.map((sel, i) => {
               const data = dataCovid.map((datapoint) => ({
@@ -251,8 +246,8 @@ function XYGraph(props) {
             {showTooltip && (
               <g>
                 <Line
-                  from={{ x: posX, y: 0 }}
-                  to={{ x: posX, y: yMax }}
+                  from={{ x: tooltipLeft, y: 0 }}
+                  to={{ x: tooltipLeft, y: yMax }}
                   stroke="yellow"
                   strokeWidth={1}
                   pointerEvents="none"
@@ -261,9 +256,9 @@ function XYGraph(props) {
 
                 {
                   selected.map(index => {
-                    const posY = (tooltipDataPoint !== undefined) ? yScale(tooltipDataPoint[index]) : null;
+                    const tooltipTop = (tooltipData !== undefined) ? yScale(tooltipData[index]) : null;
                     return (
-                      <TooltipCircle tooltipLeft={posX} tooltipTop={posY} />
+                      <TooltipCircle tooltipLeft={tooltipLeft} tooltipTop={tooltipTop} />
                     );
                   })
                 }
@@ -276,26 +271,24 @@ function XYGraph(props) {
 
       {
         showTooltip && (
-          <div>
-            <TooltipInPortal
-              key={Math.random()}
-              top={yMax}
-              left={posX}
-              style={tooltipStyles}
-            >
-              {selected.map((item) => {
-                return(
-                  <p className={'tooltipCSS'}>
-                    {item}: {(tooltipDataPoint !== undefined) ? (tooltipDataPoint[item]) : null}
-                  </p>
-                )
-              })}
-              <p className={'tooltipCSS'}>
-                Date: {(tooltipDataPoint !== undefined) ? moment(tooltipDataPoint.data).format("DD/MM/Y") : null}
-              </p>
-
-            </TooltipInPortal>
-          </div>
+          <TooltipWithBounds
+            key={Math.random()}
+            top={tooltipTop + 150}
+            //left={(tooltipLeft <= (width-200)) ? tooltipLeft + 100: tooltipLeft - 100}
+            left={tooltipLeft}
+          //style={tooltipStyles}
+          >
+            {selected.map((key) => {
+              return (
+                <p className={'tooltipCSS'}>
+                  {CHECKBOX_DATA[key].label}: {(tooltipData !== undefined) ? (tooltipData[key]) : null}
+                </p>
+              )
+            })}
+            <p className={'tooltipCSS'} style={{ textAlign: "right" }} >
+              {(tooltipData !== undefined) ? moment(tooltipData.data).format("DD/MM/Y") : null}
+            </p>
+          </TooltipWithBounds>
         )
       }
     </div >
