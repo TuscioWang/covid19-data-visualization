@@ -1,6 +1,7 @@
 import React from 'react';
 import { scaleOrdinal } from '@visx/scale';
 import { DATA_COLORS, CHECKBOX_DATA } from './AppConfig';
+import "../App.css";
 import {
     LegendOrdinal,
     LegendItem,
@@ -9,7 +10,7 @@ import {
 
 export default function Legend(props) {
     const selected = props.selected;
-    const legendGlyphSize = 15;
+    const legendBoxColor = 15;
 
     const ordinalScale = scaleOrdinal({
         domain: selected.map((key) => CHECKBOX_DATA[key].label),
@@ -18,8 +19,8 @@ export default function Legend(props) {
 
     return (
         <div className="legend">
-
-            <LegendOrdinal scale={ordinalScale} labelFormat={label => `${label.toUpperCase()}`}>
+            <LegendOrdinal scale={ordinalScale}
+                labelFormat={label => `${label.toUpperCase()}`}>
                 {labels => (
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                         {labels.map((label, i) => (
@@ -27,8 +28,13 @@ export default function Legend(props) {
                                 key={`legend-ordinal-${i}`}
                                 margin="3px 10px 3px 10px"
                             >
-                                <svg width={legendGlyphSize} height={legendGlyphSize}>
-                                    <rect style={{strokeWidth: "2", stroke: "black" }} fill={label.value} width={legendGlyphSize} height={legendGlyphSize} />
+                                <svg
+                                    width={legendBoxColor}
+                                    height={legendBoxColor}
+                                >
+                                    <rect style={{ strokeWidth: "1", stroke: "black" }}
+                                        fill={label.value} width={legendBoxColor}
+                                        height={legendBoxColor} />
                                 </svg>
                                 <LegendLabel align="left" margin="0 5px">
                                     {label.text}
@@ -38,12 +44,11 @@ export default function Legend(props) {
                     </div>
                 )}
             </LegendOrdinal>
-
-            <style jsx>
+            <style>
                 {`
         .legend {
-          font-family: arial;
-          font-weight: bold;
+          margin: -10px 100px 0 0px;
+          font-weight: 500;
           background-color: trasparent;
           border-radius: 14px;
           padding: 10px 10px 10px 10px;
@@ -51,7 +56,6 @@ export default function Legend(props) {
           flex-grow: 1;
           border:black 1px solid;
         }
-
       `}</style>
         </div>
     );

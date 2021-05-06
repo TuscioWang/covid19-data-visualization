@@ -1,10 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import "../App.css";
 import Grid from "@material-ui/core/Grid";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
 import FormControl from "@material-ui/core/FormControl";
 import FormGroup from '@material-ui/core/FormGroup';
-import FormLabel from "@material-ui/core/FormLabel";
 import Container from '@material-ui/core/Container';
 import Checkbox from '@material-ui/core/Checkbox';
 import XYGraph from "./XYChart";
@@ -13,19 +12,19 @@ import Select from '@material-ui/core/Select';
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
 import { makeStyles } from '@material-ui/core/styles';
-import { CHECKBOX_DATA, BETTER_SEL } from './AppConfig';
+import { CHECKBOX_DATA } from './AppConfig';
 import Legend from './Legend';
-//import AreaClosed from "./AreaClosed";
+import { FormLabel } from "@material-ui/core";
 
 export default function CheckboxesGroup() {
   const moment = require("moment");
   const m = moment();
   const firstStart = moment(m).startOf("year").format("LLL");
   const firstEnd = moment(m).endOf("year").format("LLL");
-  const [selectedGraphs, setSelectedGraphs] = React.useState(["totale_positivi"]);
-  const [datesInterval, setDatesInterval] = React.useState([firstStart, firstEnd]);
-  const [period, setPeriod] = React.useState('year');
-  const [shift, setShift] = React.useState(0);
+  const [selectedGraphs, setSelectedGraphs] = useState(["totale_positivi"]);
+  const [datesInterval, setDatesInterval] = useState([firstStart, firstEnd]);
+  const [period, setPeriod] = useState('year');
+  const [shift, setShift] = useState(0);
 
   const useStyles = makeStyles((theme) => ({
     formControl: {
@@ -46,6 +45,16 @@ export default function CheckboxesGroup() {
         selectedGraphs.filter(cur => cur !== graph);
     setSelectedGraphs(updatedGraphs);
   };
+
+  const displayPeriod = () => {
+    if (period === "year")
+      return moment(startDate).format("Y");
+    else if (period === "month")
+      return moment(startDate).format("MMM - Y");
+    else
+      return moment(startDate).format("WW - Y");
+
+  }
 
   //Funzione che aggiunge le date di inizio e fine
   const updateStartEndDates = (period, shift) => {
@@ -69,8 +78,11 @@ export default function CheckboxesGroup() {
   //Prende il periodo selezionato
   const handlePeriod = (event) => {
     const period = event.target.value;
+    const resetShift = 0;
+
+    setShift(resetShift);
     setPeriod(period);
-    updateStartEndDates(period, shift);
+    updateStartEndDates(period, resetShift);
   }
 
   //Fa lo schift rispetto al momento in cui sono nel tempo
@@ -82,7 +94,6 @@ export default function CheckboxesGroup() {
     updateStartEndDates(period, newShift);
   }
 
-  //stardate=datainterval[0], endData=datainterval [1]
   const [startDate, endDate] = datesInterval;
 
   return (
@@ -92,7 +103,7 @@ export default function CheckboxesGroup() {
           <Grid item md={9} >
             <Container className="generale">
               <Container className="graphCss">
-                <h1> Grafico Covid 2020-2021 </h1>
+                <h1 align="center" fontSize> GRAFICO DEL COVID-19 </h1>
                 <XYGraph
                   selected={selectedGraphs}
                   startDate={startDate}
@@ -101,15 +112,6 @@ export default function CheckboxesGroup() {
                 />
               </Container>
               <Grid container alignItems="center" justify="space-evenly">
-                <Button
-                  variant="contained"
-                  color="primary"
-                  value={-1}
-                  onClick={handleClick}
-                >
-                  - INDIETRO
-              </Button>
-
                 <FormControl variant="filled" className={classes.formControl}>
                   <InputLabel id="simple-select-label">Period</InputLabel>
                   <Select
@@ -123,23 +125,39 @@ export default function CheckboxesGroup() {
                     <MenuItem value={"year"}>Year</MenuItem>
                   </Select>
                 </FormControl>
-
-                <Button
-                  variant="contained"
-                  color="primary"
-                  value={1}
-                  onClick={handleClick}
-                >
-                  + AVANTI
+                <FormLabel id="display"><span> {period.toUpperCase()}: {displayPeriod()}</span>
+                 
+                </FormLabel>
+                <div display="flex" justify-content="space-between">
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    value={-1}
+                    onClick={handleClick}
+                  >
+                    - PREV.
               </Button>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    value={1}
+                    onClick={handleClick}
+                    width="100px"
+                  >
+                    + NEXT
+              </Button>
+                </div>
               </Grid>
             </Container>
           </Grid>
 
           <Grid item md={3}>
-            <Container style={{ fontSize: "1vw" }} className="checkboxes">
+            <Container
+              style={{ margin: "0 0 0 0", fontSize: "1vw" }}
+              className="checkboxes"
+            >
               <FormControl component="fieldset">
-                <FormLabel component="checkbox"> Seleziona dati: </FormLabel>
+                <h4 component="checkbox"> SELEZIONA DATI: </h4>
                 <FormGroup
                   aria-label="graph"
                   name="graph"
@@ -151,7 +169,8 @@ export default function CheckboxesGroup() {
                       value={key}
                       key={key}
                       control={
-                        <Checkbox defaultChecked={(index === 0) ? true : false}
+                        <Checkbox
+                          defaultChecked={(index === 0) ? true : false}
                           color={CHECKBOX_DATA[key].color}
                         />
                       }
@@ -160,7 +179,8 @@ export default function CheckboxesGroup() {
                   )}
                 </FormGroup>
               </FormControl>
-                <Legend selected={selectedGraphs} />
+              <h4> LEGENDA: </h4>
+              <Legend selected={selectedGraphs} />
             </Container>
           </Grid>
         </Grid>
