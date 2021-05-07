@@ -1,12 +1,11 @@
-import React, { useState } from "react";
-import "../App.css";
-import Grid from "@material-ui/core/Grid";
-import FormControlLabel from "@material-ui/core/FormControlLabel";
-import FormControl from "@material-ui/core/FormControl";
+import React, { useState } from 'react';
+import '../App.css';
+import Grid from '@material-ui/core/Grid';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import FormControl from '@material-ui/core/FormControl';
 import FormGroup from '@material-ui/core/FormGroup';
 import Container from '@material-ui/core/Container';
 import Checkbox from '@material-ui/core/Checkbox';
-import CovidGraph from "./MultiLineGraph";
 import Button from '@material-ui/core/Button';
 import Select from '@material-ui/core/Select';
 import InputLabel from '@material-ui/core/InputLabel';
@@ -14,11 +13,12 @@ import MenuItem from '@material-ui/core/MenuItem';
 import { makeStyles } from '@material-ui/core/styles';
 import { CHECKBOX_DATA } from './AppConfig';
 import Legend from './Legend';
-import { FormLabel, ButtonGroup } from "@material-ui/core";
-import MultiLineGraph from "./MultiLineGraph";
+import { FormLabel, ButtonGroup } from '@material-ui/core';
+import MultiLineGraph from './MultiLineGraph';
+import moment  from 'moment';
+
 
 export default function CheckboxesGroup() {
-  const moment = require("moment");
   const m = moment();
   const covidUrl="https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-json/dpc-covid19-ita-andamento-nazionale.json"
   const firstStart = moment(m).startOf("year").format("LLL");
@@ -27,7 +27,7 @@ export default function CheckboxesGroup() {
   const [datesInterval, setDatesInterval] = useState([firstStart, firstEnd]);
   const [period, setPeriod] = useState('year');
   const [shift, setShift] = useState(0);
-  
+
   const useStyles = makeStyles((theme) => ({
     formControl: {
       margin: theme.spacing(1),

@@ -11,17 +11,18 @@ import { withParentSize } from '@visx/responsive';
 import TooltipCircle from './TooltipCircle';
 import moment from 'moment';
 
-function MultiLineGraph(props) {
-  //PROPS
-  const dataUrl = props.dataUrl;
-  const selected = props.selected;
-  const startDate = props.startDate;
-  const endDate = props.endDate;
-  const periodSelected = props.periodSelected;
-  const { parentWidth, parentHeight } = props;
-  const dataConfig = props.dataConfig;
-  const timeTicks = props.timeTicks;
-
+function MultiLineGraph({
+  dataUrl,
+  selected,
+  startDate,
+  endDate,
+  periodSelected,
+  parentWidth,
+  parentHeight, 
+  dataConfig,
+  timeTicks
+}) 
+{
   const width = parentWidth;
   const height = 600;
   const margin = { top: 40, bottom: 50, left: 60, right: 30 };
@@ -50,7 +51,7 @@ function MultiLineGraph(props) {
     yAccessor: d => d.dataSelect,
   }
 
-  //Tooltip + Line
+  //Tooltip
   const tooltipStyles = {
     ...defaultStyles,
     background: "#34467d",
@@ -61,6 +62,7 @@ function MultiLineGraph(props) {
     position: "absolute",
   };
 
+  //Calcolo del valore nella coordinata del mouse
   const handleMouseOver = (event) => {
     const coords = localPoint(event.target.ownerSVGElement, event);
     const x0 = xScale.invert(coords.x - margin.left);
@@ -80,7 +82,6 @@ function MultiLineGraph(props) {
     } else {
       return 7;
     }
-
   }
   const tickFormatter = () => {
     if (periodSelected === "year") {
@@ -131,7 +132,7 @@ function MultiLineGraph(props) {
     return Max;
   }, [selected, arraySel]);
 
-  //Calcolo degli scale x, y e legenda
+  //Calcolo degli scale x, y
   const xScale = scaleTime({
     range: [0, xMax],
     round: true,
@@ -147,7 +148,7 @@ function MultiLineGraph(props) {
     nice: true,
   });
 
-  //Estraggo i valori contenuti nelle coordinate
+  //Estraggo il mio datapoint contenuto nelle coordinate
   const tooltipData = dataJson.find(d => {
     return (
       moment(tooltipValueX).isSame(moment(d.data), 'day') &&
@@ -160,7 +161,6 @@ function MultiLineGraph(props) {
   const tooltipLeft = xScale(tooltipValueX);
   const tooltipTop = yScale(tooltipValueY);
 
-  //console.log("X", tooltipLeft, "Y", tooltipTop);
   return (
     <div style={{ position: "relative" }}>
       <svg width={width} height={height}
@@ -172,7 +172,6 @@ function MultiLineGraph(props) {
           height={height}
           fill="#1F1639"
           rx={14}
-
         />
         <Group left={margin.left} top={margin.top}
           onMouseMove={handleMouseOver}
