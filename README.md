@@ -5,7 +5,7 @@ This project is builded using @visx components and React.js.
 [@visx/axis](https://airbnb.io/visx/docs/axis) [@visx/scale](https://airbnb.io/visx/docs/scale) [@visx/group](https://airbnb.io/visx/docs/group) [@visx/responsive](https://airbnb.io/visx/docs/responsive) [@visx/event](https://airbnb.io/visx/docs/event) [@visx/shape](https://airbnb.io/visx/docs/shape) [@visx/curve](https://airbnb.io/visx/docs/curve) [@visx/grid](https://airbnb.io/visx/docs/grid)
 [@visx/tooltip](https://airbnb.io/visx/docs/tooltip)
 
-![MultiLineGraph of the Covid](public/graphCovid.PNG)
+![MultiLineGraph of the Covid](https://github.com/TuscioWang/covid19-data-visualization/blob/4401804c0cf691ed713528808addfd651b7cb56a/public/GraphCovid.PNG)
 ________________________________________________________________________________
 ## APIs
 ### `<MultiLineGraph />`
