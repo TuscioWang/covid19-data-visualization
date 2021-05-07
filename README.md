@@ -1,9 +1,12 @@
 # Data Visualization MultiLineGraph
-This project is builded using @visx components and React.js.
+This project is builded using visx components and React.
 
 ## Documentation
 [@visx/axis](https://airbnb.io/visx/docs/axis) [@visx/scale](https://airbnb.io/visx/docs/scale) [@visx/group](https://airbnb.io/visx/docs/group) [@visx/responsive](https://airbnb.io/visx/docs/responsive) [@visx/event](https://airbnb.io/visx/docs/event) [@visx/shape](https://airbnb.io/visx/docs/shape) [@visx/curve](https://airbnb.io/visx/docs/curve) [@visx/grid](https://airbnb.io/visx/docs/grid)
 [@visx/tooltip](https://airbnb.io/visx/docs/tooltip)
+
+## Example
+MultiLineGraph used for [Covid-19](https://github.com/pcm-dpc/COVID-19) data visualization in Italy.
 
 ![MultiLineGraph of the Covid](https://github.com/TuscioWang/covid19-data-visualization/blob/4401804c0cf691ed713528808addfd651b7cb56a/public/GraphCovid.PNG)
 ________________________________________________________________________________
@@ -16,6 +19,7 @@ Set the JSON data URL.
 ### dataConfig
 Type: _object **required**_
 
+Set the object.
 ```js
 { 
     "<data-Key>": {
