@@ -1,13 +1,14 @@
-//import NostroGrafico from "nostro-grafico";
+import CovidGraph from "./components/MultiLineGraph";
 
-function MyPage() {
+function Example() {
     return (
         <NostroGrafico
-            dataUrl="/paht/to/my/json"
+            dataUrl="https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-json/dpc-covid19-ita-andamento-nazionale.json"
             colorsConfig={{positivi: "#f00"}}
             showTooltip={true}
             startDate={startDate}
             endDate={endDate}
             periodSelected={period}
+            selected={selectedGraph}
         />);
 }

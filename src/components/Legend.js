@@ -1,6 +1,6 @@
 import React from 'react';
 import { scaleOrdinal } from '@visx/scale';
-import { DATA_COLORS, CHECKBOX_DATA } from './AppConfig';
+import { CHECKBOX_DATA } from './AppConfig';
 import "../App.css";
 import {
     LegendOrdinal,
@@ -14,7 +14,7 @@ export default function Legend(props) {
 
     const ordinalScale = scaleOrdinal({
         domain: selected.map((key) => CHECKBOX_DATA[key].label),
-        range: selected.map((key) => DATA_COLORS[key]),
+        range: selected.map((key) => CHECKBOX_DATA[key].dataColor),
     });
 
     return (

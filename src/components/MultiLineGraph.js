@@ -1,40 +1,42 @@
-import React, { useEffect, useState, useMemo, useCallback, createRef } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Axis } from '@visx/axis';
 import { scaleLinear, scaleTime } from '@visx/scale';
-import { DATA_COLORS, CHECKBOX_DATA } from './AppConfig';
 import { Group } from '@visx/group';
-import { TooltipWithBounds, Tooltip, defaultStyles } from '@visx/tooltip';
+import { TooltipWithBounds, defaultStyles } from '@visx/tooltip';
 import { localPoint } from '@visx/event';
 import { curveBasis } from '@visx/curve';
 import { GridColumns } from '@visx/grid';
 import { LinePath, Line } from '@visx/shape';
-import { XYChart } from '@visx/xychart';
 import { withParentSize } from '@visx/responsive';
 import TooltipCircle from './TooltipCircle';
+import moment from 'moment';
 
-function XYGraph(props) {
-  const covidUrl = "https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-json/dpc-covid19-ita-andamento-nazionale.json";
+function MultiLineGraph(props) {
+  //PROPS
+  const dataUrl = props.dataUrl;
   const selected = props.selected;
   const startDate = props.startDate;
   const endDate = props.endDate;
   const periodSelected = props.periodSelected;
   const { parentWidth, parentHeight } = props;
-  const moment = require("moment");
+  const dataConfig = props.dataConfig;
+  const timeTicks = props.timeTicks;
+
   const width = parentWidth;
-  const height = 500;
+  const height = 600;
   const margin = { top: 40, bottom: 50, left: 60, right: 30 };
   const xMax = width - margin.left - margin.right;
   const yMax = height - margin.top - margin.bottom;
 
   //Tutti gli state
-  const [dataCovid, setData] = useState([]);
+  const [dataJson, setData] = useState([]);
   const [tooltipValueX, setTooltipValueX] = useState(null);
   const [tooltipValueY, setTooltipValueY] = useState(null);
   const showTooltip = tooltipValueX != null;
 
   //Prendo i miei dati e li trasformo in json
   const getDataJson = async () => {
-    await fetch(covidUrl)
+    await fetch(dataUrl)
       .then(res => res.json())
       .then(receivedData => setData(receivedData));
   }
@@ -45,7 +47,7 @@ function XYGraph(props) {
   //Oggetto che contiene i miei accessors
   const accessors = {
     xAccessor: d => d.date,
-    yAccessor: d => d.datoScelto,
+    yAccessor: d => d.dataSelect,
   }
 
   //Tooltip + Line
@@ -58,10 +60,7 @@ function XYGraph(props) {
     paddingBottom: 0,
     position: "absolute",
   };
-  /* const {To } = useTooltipWithBound({
-    detectBounds: true,
-    scroll: true,
-  }); */
+
   const handleMouseOver = (event) => {
     const coords = localPoint(event.target.ownerSVGElement, event);
     const x0 = xScale.invert(coords.x - margin.left);
@@ -72,6 +71,8 @@ function XYGraph(props) {
 
   //Funzioni per il formato dei tick
   const numTick = () => {
+    if (timeTicks != null)
+      return timeTicks;
     if (periodSelected === "year") {
       return 12;
     } else if (periodSelected === "month") {
@@ -79,6 +80,7 @@ function XYGraph(props) {
     } else {
       return 7;
     }
+
   }
   const tickFormatter = () => {
     if (periodSelected === "year") {
@@ -101,27 +103,22 @@ function XYGraph(props) {
     }
   }
 
-  //Stampa del periodo di tempo selezionato in console
-  useMemo(() => {
-    //console.log("START:", startDate, "END:", endDate)
-  }, [startDate, endDate]);
-
   //Funzione che mi trova la data del periodo selezionato
   const rangeData = useMemo(() => {
-    return (dataCovid.filter((d) =>
+    return (dataJson.filter((d) =>
       new Date(startDate) < new Date(d.data) &&
       new Date(endDate) > new Date(d.data)
     ));
-  }, [dataCovid, startDate, endDate]);
+  }, [dataJson, startDate, endDate]);
 
   //Funzione che mi trova gli array contenenti i dati dei checkbox selezionati
   const arraySel = useMemo(() => {
     return (selected.map(sel => {
-      return (dataCovid.map((datapoint) => ({
-        datoScelto: datapoint[sel],
+      return (dataJson.map((datapoint) => ({
+        dataSelect: datapoint[sel],
       })));
     }))
-  }, [selected, dataCovid]);
+  }, [selected, dataJson]);
 
   //Calcolo per trovare il mio max di tutti i dati che ho selezionato
   const numberMax = useMemo(() => {
@@ -151,7 +148,7 @@ function XYGraph(props) {
   });
 
   //Estraggo i valori contenuti nelle coordinate
-  const tooltipData = dataCovid.find(d => {
+  const tooltipData = dataJson.find(d => {
     return (
       moment(tooltipValueX).isSame(moment(d.data), 'day') &&
       moment(tooltipValueX).isSame(moment(d.data), 'year') &&
@@ -220,16 +217,9 @@ function XYGraph(props) {
               fill: '#C6B5DE'
             })}
           />
-          {/*   <XYChart
-            key={"graph"}
-            width={xMax}
-            height={yMax}
-            xScale={{ type: "band" }}
-            yScale={{ type: "linear" }}
-          > */}
           {selected.map((sel, i) => {
-            const data = dataCovid.map((datapoint) => ({
-              datoScelto: datapoint[sel],
+            const data = dataJson.map((datapoint) => ({
+              dataSelect: datapoint[sel],
               date: datapoint.data,
             }));
             const filteredData = data.filter(
@@ -240,13 +230,13 @@ function XYGraph(props) {
 
             return (
               <LinePath
-                stroke={DATA_COLORS[sel]}
+                stroke={dataConfig[sel].dataColor}
                 data={filteredData}
                 key={`Line ${i}`}
                 strokeWidth={3}
                 curve={curveBasis}
                 x={d => xScale(new Date(d.date).valueOf())}
-                y={d => yScale(d.datoScelto)}
+                y={d => yScale(d.dataSelect)}
               />
             );
           })}
@@ -268,7 +258,7 @@ function XYGraph(props) {
                     : null;
                   return (
                     <TooltipCircle
-                      colors={DATA_COLORS[index]}
+                      colors={dataConfig[index].dataColor}
                       tooltipLeft={tooltipLeft}
                       tooltipTop={tooltipTop}
                     />
@@ -278,7 +268,6 @@ function XYGraph(props) {
                 )
             </g>
           )}
-          {/* </XYChart> */}
         </Group>
       </svg>
       {showTooltip && (
@@ -294,7 +283,7 @@ function XYGraph(props) {
           {selected.map((key) => {
             return (
               <p className={'tooltipCSS'}>
-                {CHECKBOX_DATA[key].label}: {(tooltipData !== undefined)
+                {dataConfig[key].label}: {(tooltipData !== undefined)
                   ? (tooltipData[key])
                   : null}
               </p>
@@ -311,4 +300,4 @@ function XYGraph(props) {
     </div >
   );
 }
-export default withParentSize(XYGraph);
+export default withParentSize(MultiLineGraph);

@@ -6,7 +6,7 @@ import FormControl from "@material-ui/core/FormControl";
 import FormGroup from '@material-ui/core/FormGroup';
 import Container from '@material-ui/core/Container';
 import Checkbox from '@material-ui/core/Checkbox';
-import XYGraph from "./XYChart";
+import CovidGraph from "./MultiLineGraph";
 import Button from '@material-ui/core/Button';
 import Select from '@material-ui/core/Select';
 import InputLabel from '@material-ui/core/InputLabel';
@@ -14,18 +14,20 @@ import MenuItem from '@material-ui/core/MenuItem';
 import { makeStyles } from '@material-ui/core/styles';
 import { CHECKBOX_DATA } from './AppConfig';
 import Legend from './Legend';
-import { FormLabel } from "@material-ui/core";
+import { FormLabel, ButtonGroup } from "@material-ui/core";
+import MultiLineGraph from "./MultiLineGraph";
 
 export default function CheckboxesGroup() {
   const moment = require("moment");
   const m = moment();
+  const covidUrl="https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-json/dpc-covid19-ita-andamento-nazionale.json"
   const firstStart = moment(m).startOf("year").format("LLL");
   const firstEnd = moment(m).endOf("year").format("LLL");
   const [selectedGraphs, setSelectedGraphs] = useState(["totale_positivi"]);
   const [datesInterval, setDatesInterval] = useState([firstStart, firstEnd]);
   const [period, setPeriod] = useState('year');
   const [shift, setShift] = useState(0);
-
+  
   const useStyles = makeStyles((theme) => ({
     formControl: {
       margin: theme.spacing(1),
@@ -33,7 +35,6 @@ export default function CheckboxesGroup() {
     },
   }));
   const classes = useStyles();
-
 
   //Funzione che mi aggiorna l'array contenenti il grafico selezionato
   const handleChange = (event) => {
@@ -46,17 +47,15 @@ export default function CheckboxesGroup() {
     setSelectedGraphs(updatedGraphs);
   };
 
+  //Funzioni per gestire il periodo e lo shift
   const displayPeriod = () => {
     if (period === "year")
       return moment(startDate).format("Y");
     else if (period === "month")
-      return moment(startDate).format("MMM - Y");
+      return moment(startDate).format("MMMM - Y");
     else
-      return moment(startDate).format("WW - Y");
-
+      return moment(startDate).format("[W] WW - Y");
   }
-
-  //Funzione che aggiunge le date di inizio e fine
   const updateStartEndDates = (period, shift) => {
     let startDate;
     let endDate;
@@ -103,8 +102,10 @@ export default function CheckboxesGroup() {
           <Grid item md={9} >
             <Container className="generale">
               <Container className="graphCss">
-                <h1 align="center" fontSize> GRAFICO DEL COVID-19 </h1>
-                <XYGraph
+                <h1 align="center"> GRAFICO DEL COVID-19 </h1>
+                <MultiLineGraph
+                  dataConfig={CHECKBOX_DATA}
+                  dataUrl={covidUrl}
                   selected={selectedGraphs}
                   startDate={startDate}
                   endDate={endDate}
@@ -125,35 +126,32 @@ export default function CheckboxesGroup() {
                     <MenuItem value={"year"}>Year</MenuItem>
                   </Select>
                 </FormControl>
-                <FormLabel id="display"><span> {period.toUpperCase()}: {displayPeriod()}</span>
-                 
+                <FormLabel id="display">
+                  <span>
+                    {displayPeriod()}
+                  </span>
                 </FormLabel>
-                <div display="flex" justify-content="space-between">
+                <ButtonGroup variant="contained" color="primary">
                   <Button
-                    variant="contained"
-                    color="primary"
                     value={-1}
                     onClick={handleClick}
                   >
                     - PREV.
               </Button>
                   <Button
-                    variant="contained"
-                    color="primary"
                     value={1}
                     onClick={handleClick}
-                    width="100px"
                   >
                     + NEXT
               </Button>
-                </div>
+                </ButtonGroup>
               </Grid>
             </Container>
           </Grid>
 
           <Grid item md={3}>
             <Container
-              style={{ margin: "0 0 0 0", fontSize: "1vw" }}
+              style={{fontSize: "1vw" }}
               className="checkboxes"
             >
               <FormControl component="fieldset">

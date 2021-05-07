@@ -1,70 +1,58 @@
-# Getting Started with Create React App
+# Data Visualization MultiLineGraph
+This project is builded using @visx components and React.js.
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Documentation
+[@visx/axis](https://airbnb.io/visx/docs/axis) [@visx/scale](https://airbnb.io/visx/docs/scale) [@visx/group](https://airbnb.io/visx/docs/group) [@visx/responsive](https://airbnb.io/visx/docs/responsive) [@visx/event](https://airbnb.io/visx/docs/event) [@visx/shape](https://airbnb.io/visx/docs/shape) [@visx/curve](https://airbnb.io/visx/docs/curve) [@visx/grid](https://airbnb.io/visx/docs/grid)
+[@visx/tooltip](https://airbnb.io/visx/docs/tooltip)
 
-## Available Scripts
-
-In the project directory, you can run:
-
-### `npm start`
-
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
-
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
-
-### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
+![MultiLineGraph of the Covid](\public\GraphCovid.PNG)
+________________________________________________________________________________
+#### APIs
+### `<MultiLineGraph />`
+##### dataUrl
+Type: _string **required**_
+Set the JSON data URL. 
+##### dataConfig
+Type: _object **required**_
+```js
+{ 
+    "<data-Key>": {
+        label: "name of the data"
+        color: "primary|secondary|default|inherit"
+        dataColor: "#color"
+    }
+}
+```
+##### startDate
+Type: _date **required**_
+Set the start date for the visualizzation (tip: use moment.js).
+##### endDate
+Type: _date **required**_
+Set the end date for the visualizzation (tip: use moment.js).
+##### selected
+Type: _array[] **required**_
+Set the array of the selected data.
+##### periodSelected
+Type: _string "year" | "month" | "week"_
+Set the period selected, that allows you to have a different ticks visualization in the X-axis .
+##### timeTicks
+Type: _number_
+Set the number of ticks to show in the X-axis.
+##### showTooltip
+Type: _boolean "true **|** false"_
+Set the showTooltip.
+________________________________________________________________________________
+### `<TooltipCircle />`
+##### tooltipLeft
+Type: _number **required**_
+Set the coordinate for the circle according to X-axis.
+##### tooltipTop
+Type: _number **required**_
+Set the coordinate for the circle according to Y-axis.
+##### colors
+Type: _array[]_
+Set the array of colors for.circles.
+________________________________________________________________________________
 ## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+To use others components of visx, take a look [@visx](https://github.com/airbnb/visx).
+To learn more about React, check out [React documentation](https://reactjs.org/).
