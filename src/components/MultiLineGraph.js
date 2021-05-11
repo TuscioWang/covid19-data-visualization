@@ -1,15 +1,16 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { Axis } from '@visx/axis';
-import { scaleLinear, scaleTime } from '@visx/scale';
-import { Group } from '@visx/group';
-import { TooltipWithBounds, defaultStyles } from '@visx/tooltip';
-import { localPoint } from '@visx/event';
-import { curveBasis } from '@visx/curve';
-import { GridColumns } from '@visx/grid';
-import { LinePath, Line } from '@visx/shape';
-import { withParentSize } from '@visx/responsive';
-import TooltipCircle from './TooltipCircle';
-import moment from 'moment';
+import React, { useEffect, useState, useMemo } from "react";
+import { useTransition, animated } from "react-spring";
+import { Axis } from "@visx/axis";
+import { scaleLinear, scaleTime } from "@visx/scale";
+import { Group } from "@visx/group";
+import { TooltipWithBounds, defaultStyles } from "@visx/tooltip";
+import { localPoint } from "@visx/event";
+import { curveBasis } from "@visx/curve";
+import { GridColumns } from "@visx/grid";
+import { LinePath, Line } from "@visx/shape";
+import { withParentSize } from "@visx/responsive";
+import TooltipCircle from "./TooltipCircle";
+import moment from "moment";
 
 function MultiLineGraph({
   dataUrl,
@@ -18,11 +19,10 @@ function MultiLineGraph({
   endDate,
   periodSelected,
   parentWidth,
-  parentHeight, 
+  parentHeight,
   dataConfig,
-  timeTicks
-}) 
-{
+  timeTicks,
+}) {
   const width = parentWidth;
   const height = 600;
   const margin = { top: 40, bottom: 50, left: 60, right: 30 };
@@ -30,26 +30,16 @@ function MultiLineGraph({
   const yMax = height - margin.top - margin.bottom;
 
   //Tutti gli state
-  const [dataJson, setData] = useState([]);
   const [tooltipValueX, setTooltipValueX] = useState(null);
   const [tooltipValueY, setTooltipValueY] = useState(null);
+  const [items, setItems] = useState(false);
   const showTooltip = tooltipValueX != null;
-
-  //Prendo i miei dati e li trasformo in json
-  const getDataJson = async () => {
-    await fetch(dataUrl)
-      .then(res => res.json())
-      .then(receivedData => setData(receivedData));
-  }
-  useEffect(() => {
-    getDataJson();
-  }, []);
 
   //Oggetto che contiene i miei accessors
   const accessors = {
-    xAccessor: d => d.date,
-    yAccessor: d => d.dataSelect,
-  }
+    xAccessor: (d) => d.date,
+    yAccessor: (d) => d.dataSelect,
+  };
 
   //Tooltip
   const tooltipStyles = {
@@ -71,10 +61,15 @@ function MultiLineGraph({
     setTooltipValueY(y0); //Valore contenuto (numeri) di questa coordinata
   };
 
+  const transitions = useTransition(items, {
+    from: { opacity: 1 },
+    enter: { opacity: 1 },
+    leave: { opacity: 0 },
+  });
+
   //Funzioni per il formato dei tick
   const numTick = () => {
-    if (timeTicks != null)
-      return timeTicks;
+    if (timeTicks != null) return timeTicks;
     if (periodSelected === "year") {
       return 12;
     } else if (periodSelected === "month") {
@@ -82,52 +77,57 @@ function MultiLineGraph({
     } else {
       return 7;
     }
-  }
+  };
   const tickFormatter = () => {
     if (periodSelected === "year") {
-      return d => moment(d).format("MMM YY");
+      return (d) => moment(d).format("DD MMM");
     } else if (periodSelected === "month") {
-      return d => moment(d).format("DD-MM-YY");
+      return (d) => moment(d).format("DD-MM-YY");
     } else {
-      return d => moment(d).format("ddd DD MMM  Y");
+      return (d) => moment(d).format("ddd DD MMM  Y");
     }
-  }
+  };
   const tickNumberFormat = (n) => {
     if (n >= 1000000) {
       return Math.abs(n) > 999
-        ? Math.sign(n) * ((Math.abs(n) / 1000000).toFixed(1)) + ' M'
-        : Math.sign(n) * Math.abs(n)
+        ? Math.sign(n) * (Math.abs(n) / 1000000).toFixed(1) + " M"
+        : Math.sign(n) * Math.abs(n);
     } else {
       return Math.abs(n) > 999
-        ? Math.sign(n) * ((Math.abs(n) / 1000).toFixed(1)) + ' K '
-        : Math.sign(n) * Math.abs(n)
+        ? Math.sign(n) * (Math.abs(n) / 1000).toFixed(1) + " K "
+        : Math.sign(n) * Math.abs(n);
     }
+  };
+
+  //Formato dei numeri
+  function formatNumber(num) {
+    return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
   }
 
   //Funzione che mi trova la data del periodo selezionato
   const rangeData = useMemo(() => {
-    return (dataJson.filter((d) =>
-      new Date(startDate) < new Date(d.data) &&
-      new Date(endDate) > new Date(d.data)
-    ));
-  }, [dataJson, startDate, endDate]);
+    return dataUrl.filter(
+      (d) =>
+        new Date(startDate) < new Date(d.data) &&
+        new Date(endDate) > new Date(d.data)
+    );
+  }, [dataUrl, startDate, endDate]);
 
   //Funzione che mi trova gli array contenenti i dati dei checkbox selezionati
   const arraySel = useMemo(() => {
-    return (selected.map(sel => {
-      return (dataJson.map((datapoint) => ({
+    return selected.map((sel) => {
+      return dataUrl.map((datapoint) => ({
         dataSelect: datapoint[sel],
-      })));
-    }))
-  }, [selected, dataJson]);
+      }));
+    });
+  }, [selected, dataUrl]);
 
   //Calcolo per trovare il mio max di tutti i dati che ho selezionato
   const numberMax = useMemo(() => {
     let Max = 0;
     for (let i = 0; i < selected.length; i++) {
       const currentMax = Math.max(...arraySel[i].map(accessors.yAccessor));
-      if (currentMax > Max)
-        Max = currentMax;
+      if (currentMax > Max) Max = currentMax;
     }
     return Max;
   }, [selected, arraySel]);
@@ -137,8 +137,8 @@ function MultiLineGraph({
     range: [0, xMax],
     round: true,
     domain: [
-      Math.min(...rangeData.map(d => new Date(d.data))),
-      Math.max(...rangeData.map(d => new Date(d.data)))
+      Math.min(...rangeData.map((d) => new Date(d.data))),
+      Math.max(...rangeData.map((d) => new Date(d.data))),
     ],
   });
   const yScale = scaleLinear({
@@ -149,11 +149,11 @@ function MultiLineGraph({
   });
 
   //Estraggo il mio datapoint contenuto nelle coordinate
-  const tooltipData = dataJson.find(d => {
+  const tooltipData = dataUrl.find((d) => {
     return (
-      moment(tooltipValueX).isSame(moment(d.data), 'day') &&
-      moment(tooltipValueX).isSame(moment(d.data), 'year') &&
-      moment(tooltipValueX).isSame(moment(d.data), 'week')
+      moment(tooltipValueX).isSame(moment(d.data), "day") &&
+      moment(tooltipValueX).isSame(moment(d.data), "year") &&
+      moment(tooltipValueX).isSame(moment(d.data), "week")
     );
   });
 
@@ -163,8 +163,7 @@ function MultiLineGraph({
 
   return (
     <div style={{ position: "relative" }}>
-      <svg width={width} height={height}
-      >
+      <svg width={width} height={height}>
         <rect
           x={0}
           y={0}
@@ -173,7 +172,9 @@ function MultiLineGraph({
           fill="#1F1639"
           rx={14}
         />
-        <Group left={margin.left} top={margin.top}
+        <Group
+          left={margin.left}
+          top={margin.top}
           onMouseMove={handleMouseOver}
           onTouchMove={handleMouseOver}
           onTouchStart={handleMouseOver}
@@ -194,11 +195,11 @@ function MultiLineGraph({
             numTicks={10}
             stroke="#C6B5DE"
             tickStroke="#C6B5DE"
-            tickFormat={d => tickNumberFormat(d)}
+            tickFormat={(d) => tickNumberFormat(d)}
             tickLabelProps={(d) => ({
-              fontSize: 11,
-              textAnchor: 'end',
-              fill: '#C6B5DE'
+              fontSize: 10,
+              textAnchor: "end",
+              fill: "#C6B5DE",
             })}
           />
           <Axis //Axis X
@@ -211,20 +212,20 @@ function MultiLineGraph({
             tickStroke="#C6B5DE"
             tickFormat={tickFormatter(periodSelected)}
             tickLabelProps={() => ({
-              fontSize: 11,
-              textAnchor: 'middle',
-              fill: '#C6B5DE'
+              fontSize: 10 ,
+              textAnchor: "middle",
+              fill: "#C6B5DE",
             })}
           />
           {selected.map((sel, i) => {
-            const data = dataJson.map((datapoint) => ({
+            const data = dataUrl.map((datapoint) => ({
               dataSelect: datapoint[sel],
               date: datapoint.data,
             }));
             const filteredData = data.filter(
-              d =>
+              (d) =>
                 new Date(startDate) < new Date(d.date) &&
-                new Date(endDate) > new Date(d.date),
+                new Date(endDate) > new Date(d.date)
             );
 
             return (
@@ -234,8 +235,8 @@ function MultiLineGraph({
                 key={`Line ${i}`}
                 strokeWidth={3}
                 curve={curveBasis}
-                x={d => xScale(new Date(d.date).valueOf())}
-                y={d => yScale(d.dataSelect)}
+                x={(d) => xScale(new Date(d.date).valueOf())}
+                y={(d) => yScale(d.dataSelect)}
               />
             );
           })}
@@ -250,21 +251,18 @@ function MultiLineGraph({
                 pointerEvents="none"
                 strokeDasharray="5,2"
               />
-              {
-                selected.map(index => {
-                  const tooltipTop = (tooltipData !== undefined)
-                    ? yScale(tooltipData[index])
-                    : null;
-                  return (
-                    <TooltipCircle
-                      colors={dataConfig[index].dataColor}
-                      tooltipLeft={tooltipLeft}
-                      tooltipTop={tooltipTop}
-                    />
-                  );
-                })
-              }
-                )
+              {selected.map((index) => {
+                const tooltipTop =
+                  tooltipData !== undefined ? yScale(tooltipData[index]) : null;
+                return (
+                  <TooltipCircle
+                    colors={dataConfig[index].dataColor}
+                    tooltipLeft={tooltipLeft}
+                    tooltipTop={tooltipTop}
+                  />
+                );
+              })}
+              )
             </g>
           )}
         </Group>
@@ -273,30 +271,38 @@ function MultiLineGraph({
         <TooltipWithBounds
           key={Math.random()}
           top={tooltipTop + margin.top}
-          left={(tooltipLeft <= (width - 200))
-            ? tooltipLeft + margin.left
-            : tooltipLeft - margin.left
+          left={
+            tooltipLeft <= width - 200
+              ? tooltipLeft + margin.left
+              : tooltipLeft - margin.left
           }
           style={tooltipStyles}
         >
           {selected.map((key) => {
             return (
-              <p className={'tooltipCSS'}>
-                {dataConfig[key].label}: {(tooltipData !== undefined)
-                  ? (tooltipData[key])
-                  : null}
-              </p>
-            )
+              <div style={{ margin:"0px 10px -20px 10px",justifyContent: "space-between", display: "flex" }}>
+                <p
+                  className={"tooltipCSS"}
+                  style={{ marginRight: 10, textAlign: "left" }}
+                >
+                  {dataConfig[key].label}:
+                </p>
+                <p style={{ textAlign: "right" }}>
+                  {tooltipData !== undefined
+                    ? formatNumber(tooltipData[key])
+                    : null}
+                </p>
+              </div>
+            );
           })}
-          <p className={'tooltipCSS'} style={{ textAlign: "right" }} >
-            {(tooltipData !== undefined)
+          <p className={"tooltipCSS"} style={{ textAlign: "center" }}>
+            {tooltipData !== undefined
               ? moment(tooltipData.data).format("DD/MM/Y")
               : null}
           </p>
         </TooltipWithBounds>
-      )
-      }
-    </div >
+      )}
+    </div>
   );
 }
 export default withParentSize(MultiLineGraph);
