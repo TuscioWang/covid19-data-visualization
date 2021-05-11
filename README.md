@@ -24,7 +24,7 @@ Set the object.
 { 
     "<data-Key>": {
         label: "name of the data"
-        color: "primary|secondary|default|inherit"
+        color: "primary"|"secondary"|"default"|"inherit"
         dataColor: "#color"
     }
 }
