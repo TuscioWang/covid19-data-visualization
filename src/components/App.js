@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "../App.css";
 import Grid from "@material-ui/core/Grid";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
@@ -12,10 +12,33 @@ import InputLabel from "@material-ui/core/InputLabel";
 import MenuItem from "@material-ui/core/MenuItem";
 import { makeStyles } from "@material-ui/core/styles";
 import { CHECKBOX_DATA } from "./AppConfig";
-import Legend from "./Legend";
-import { FormLabel, ButtonGroup } from "@material-ui/core";
+//import Legend from "./Legend";
+import { FormLabel, ButtonGroup, Switch } from "@material-ui/core";
 import MultiLineGraph from "./MultiLineGraph";
 import moment from "moment";
+import clsx from "clsx";
+
+function ColorsCheckbox({ color, ...props }) {
+  const checkBoxRef = useRef();
+  const useStyles = makeStyles({
+    root: {
+      color: "grey",
+      "&$checked": {
+        color: color,
+      },
+    },
+    checked: {},
+  });
+  const classes = useStyles();
+  return (
+    <Checkbox
+      ref={checkBoxRef}
+      className={clsx(classes.root, classes.checked)}
+      color="default"
+      {...props}
+    />
+  );
+}
 
 export default function CheckboxesGroup() {
   const m = moment();
@@ -29,6 +52,13 @@ export default function CheckboxesGroup() {
   const [datesInterval, setDatesInterval] = useState([firstStart, firstEnd]);
   const [period, setPeriod] = useState("year");
   const [shift, setShift] = useState(0);
+
+  const [state, setState] = useState(true);
+
+  const handleSwitch = (e) => {
+    const checked = e.target.checked;
+    setState(checked);
+  };
 
   const useStyles = makeStyles((theme) => ({
     formControl: {
@@ -79,6 +109,9 @@ export default function CheckboxesGroup() {
     setDatesInterval([startDate, endDate]);
   };
 
+  
+  console.log(moment(m).startOf("year").add(shift, "y").format("LL"),moment(m).endOf("year").add(shift, "y").format("LL"))
+
   //Prende il periodo selezionato
   const handlePeriod = (event) => {
     const period = event.target.value;
@@ -110,7 +143,7 @@ export default function CheckboxesGroup() {
         <Grid item xs={12} container>
           <Grid item md={9}>
             <Container className="generale">
-              <Container className="graphCss">
+              <Container>
                 <h1 align="center"> GRAFICO DEL COVID-19 </h1>
                 <MultiLineGraph
                   dataConfig={CHECKBOX_DATA}
@@ -168,34 +201,36 @@ export default function CheckboxesGroup() {
                   value={selectedGraphs}
                   onChange={handleChange}
                 >
-                  {Object.keys(CHECKBOX_DATA).map((key, index) => (
-                    <FormControlLabel
-                      value={key}
-                      key={key}
-                      control={
-                        <Checkbox
-                          defaultChecked={index === 0 ? true : false}
-                          color={CHECKBOX_DATA[key].color}
-                        />
-                      }
-                      label={CHECKBOX_DATA[key].label}
-                    />
-                  ))}
+                  {Object.keys(CHECKBOX_DATA).map((key, index) => {
+                    return (
+                      <FormControlLabel
+                        value={key}
+                        key={key}
+                        control={
+                          <ColorsCheckbox
+                            defaultChecked={index === 0 ? true : false}
+                            color={CHECKBOX_DATA[key].dataColor}
+                          />
+                        }
+                        label={CHECKBOX_DATA[key].label}
+                      />
+                    );
+                  })}
                 </FormGroup>
               </FormControl>
 
-              <h4> LEGENDA </h4>
-              <Legend selected={selectedGraphs} />
-
+              <h4>FUNZIONI DISPONIBILI</h4>
               <FormControlLabel
                 control={
-                  <Checkbox
-                    name="gilad"
+                  <Switch
+                    onChange={handleSwitch}
+                    color="primary"
+                    name="switch"
+                    checked={state}
                   />
                 }
-                label="Dominio esteso"
+                label={state ? "Dominio Esteso" : <del>Dominio Esteso</del>}
               />
-              
             </Container>
           </Grid>
         </Grid>

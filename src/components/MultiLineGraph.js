@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { useTransition, animated } from "react-spring";
+import { useTransition } from "react-spring";
 import { Axis } from "@visx/axis";
 import { scaleLinear, scaleTime } from "@visx/scale";
 import { Group } from "@visx/group";
@@ -7,6 +7,7 @@ import { TooltipWithBounds, defaultStyles } from "@visx/tooltip";
 import { localPoint } from "@visx/event";
 import { curveBasis } from "@visx/curve";
 import { GridColumns } from "@visx/grid";
+import { useSpring, animated } from "react-spring";
 import { LinePath, Line } from "@visx/shape";
 import { withParentSize } from "@visx/responsive";
 import TooltipCircle from "./TooltipCircle";
@@ -61,10 +62,13 @@ function MultiLineGraph({
     setTooltipValueY(y0); //Valore contenuto (numeri) di questa coordinata
   };
 
-  const transitions = useTransition(items, {
-    from: { opacity: 1 },
-    enter: { opacity: 1 },
-    leave: { opacity: 0 },
+  const styles = useSpring({
+    loop: true,
+    to: [
+      { opacity: 1, },
+      { opacity: 0, },
+    ],
+    from: { opacity: 0, },
   });
 
   //Funzioni per il formato dei tick
@@ -87,6 +91,8 @@ function MultiLineGraph({
       return (d) => moment(d).format("ddd DD MMM  Y");
     }
   };
+
+  console.log(moment().startOf("year"), moment().endOf("year"));
   const tickNumberFormat = (n) => {
     if (n >= 1000000) {
       return Math.abs(n) > 999
@@ -212,7 +218,7 @@ function MultiLineGraph({
             tickStroke="#C6B5DE"
             tickFormat={tickFormatter(periodSelected)}
             tickLabelProps={() => ({
-              fontSize: 10 ,
+              fontSize: 10,
               textAnchor: "middle",
               fill: "#C6B5DE",
             })}
@@ -229,15 +235,17 @@ function MultiLineGraph({
             );
 
             return (
-              <LinePath
-                stroke={dataConfig[sel].dataColor}
-                data={filteredData}
-                key={`Line ${i}`}
-                strokeWidth={3}
-                curve={curveBasis}
-                x={(d) => xScale(new Date(d.date).valueOf())}
-                y={(d) => yScale(d.dataSelect)}
-              />
+              <animated.div style={styles}>
+                <LinePath
+                  stroke={dataConfig[sel].dataColor}
+                  data={filteredData}
+                  key={`Line ${i}`}
+                  strokeWidth={3}
+                  curve={curveBasis}
+                  x={(d) => xScale(new Date(d.date).valueOf())}
+                  y={(d) => yScale(d.dataSelect)}
+                />
+              </animated.div>
             );
           })}
 
@@ -267,20 +275,23 @@ function MultiLineGraph({
           )}
         </Group>
       </svg>
+
       {showTooltip && (
         <TooltipWithBounds
           key={Math.random()}
           top={tooltipTop + margin.top}
-          left={
-            tooltipLeft <= width - 200
-              ? tooltipLeft + margin.left
-              : tooltipLeft - margin.left
-          }
+          left={tooltipLeft + margin.left}
           style={tooltipStyles}
         >
           {selected.map((key) => {
             return (
-              <div style={{ margin:"0px 10px -20px 10px",justifyContent: "space-between", display: "flex" }}>
+              <div
+                style={{
+                  margin: "0px 0 -20px 0",
+                  justifyContent: "space-between",
+                  display: "flex",
+                }}
+              >
                 <p
                   className={"tooltipCSS"}
                   style={{ marginRight: 10, textAlign: "left" }}

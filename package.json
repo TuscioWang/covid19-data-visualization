@@ -24,6 +24,7 @@
     "@visx/visx": "^1.7.3",
     "@visx/xychart": "^1.7.3",
     "axios": "^0.21.1",
+    "clsx": "^1.1.1",
     "http-proxy-middleware": "^1.2.0",
     "moment": "^2.29.1",
     "react": "^17.0.2",

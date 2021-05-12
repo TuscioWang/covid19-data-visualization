@@ -16,11 +16,11 @@
     width: 50%; 
 }
 h1{
-    font-weight: 500;
+    font-weight: bold;
     font-size: 2.5vw;
     color: #1F1639
 }
 .checkboxes{
     position: relative; 
-    top: 10%;
+    top: 8%;
 }
