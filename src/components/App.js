@@ -13,7 +13,13 @@ import MenuItem from "@material-ui/core/MenuItem";
 import { makeStyles } from "@material-ui/core/styles";
 import { CHECKBOX_DATA } from "./AppConfig";
 //import Legend from "./Legend";
-import { FormLabel, ButtonGroup, Switch } from "@material-ui/core";
+import {
+  FormLabel,
+  ButtonGroup,
+  Switch,
+  Radio,
+  RadioGroup,
+} from "@material-ui/core";
 import MultiLineGraph from "./MultiLineGraph";
 import moment from "moment";
 import clsx from "clsx";
@@ -53,11 +59,12 @@ export default function CheckboxesGroup() {
   const [period, setPeriod] = useState("year");
   const [shift, setShift] = useState(0);
 
-  const [state, setState] = useState(true);
+  const [view, setView] = useState("domain");
 
   const handleSwitch = (e) => {
-    const checked = e.target.checked;
-    setState(checked);
+    const view = e.target.value;
+    console.log(view);
+    setView(view);
   };
 
   const useStyles = makeStyles((theme) => ({
@@ -109,9 +116,6 @@ export default function CheckboxesGroup() {
     setDatesInterval([startDate, endDate]);
   };
 
-  
-  console.log(moment(m).startOf("year").add(shift, "y").format("LL"),moment(m).endOf("year").add(shift, "y").format("LL"))
-
   //Prende il periodo selezionato
   const handlePeriod = (event) => {
     const period = event.target.value;
@@ -125,10 +129,6 @@ export default function CheckboxesGroup() {
   const [startDate, endDate] = datesInterval;
 
   //Fa lo schift rispetto al momento in cui sono nel tempo
-  const arrayData = dataJson.map((d) => d.data);
-  const initDate = arrayData[0];
-  const finalDate = arrayData[arrayData.length - 1];
-
   const handleClick = (event) => {
     const value = parseInt(event.currentTarget.value);
     const newShift = shift + value;
@@ -136,6 +136,11 @@ export default function CheckboxesGroup() {
     setShift(newShift);
     updateStartEndDates(period, newShift);
   };
+
+  //Visualizzazione dominio non esteso
+  const arrayData = dataJson.map((d) => d.data);
+  const initDate = arrayData[0];
+  const finalDate = arrayData[arrayData.length - 1];
 
   return (
     <div>
@@ -152,6 +157,7 @@ export default function CheckboxesGroup() {
                   startDate={startDate}
                   endDate={endDate}
                   periodSelected={period}
+                  view={view}
                 />
               </Container>
               <Grid container alignItems="center" justify="space-evenly">
@@ -219,18 +225,19 @@ export default function CheckboxesGroup() {
                 </FormGroup>
               </FormControl>
 
-              <h4>FUNZIONI DISPONIBILI</h4>
-              <FormControlLabel
-                control={
-                  <Switch
-                    onChange={handleSwitch}
-                    color="primary"
-                    name="switch"
-                    checked={state}
-                  />
-                }
-                label={state ? "Dominio Esteso" : <del>Dominio Esteso</del>}
-              />
+              <h4>VISUALIZZAZIONI DISPONIBILI</h4>
+              <RadioGroup onChange={handleSwitch} value={view}>
+                <FormControlLabel
+                  value="domain"
+                  control={<Radio color="primary" />}
+                  label="Visuale Dominio"
+                />
+                <FormControlLabel
+                  value="period"
+                  control={<Radio color="primary" />}
+                  label="Visuale Periodo"
+                />
+              </RadioGroup>
             </Container>
           </Grid>
         </Grid>

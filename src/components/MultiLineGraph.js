@@ -1,5 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
-import { useTransition } from "react-spring";
+import React, { useState, useMemo } from "react";
 import { Axis } from "@visx/axis";
 import { scaleLinear, scaleTime } from "@visx/scale";
 import { Group } from "@visx/group";
@@ -13,6 +12,71 @@ import { withParentSize } from "@visx/responsive";
 import TooltipCircle from "./TooltipCircle";
 import moment from "moment";
 
+function Graph({
+  interpolateMax,
+  yMax,
+  colorStroke,
+  tickFormatY,
+  tickLabelPropsY,
+  selected,
+  dataUrl,
+  filteredData,
+  dataConfig,
+  x,
+  xScale,
+  numTicksX,
+  tickFormatX,
+  tickLabelPropsX,
+}) {
+  const yScale = scaleLinear({
+    range: [yMax, 0],
+    round: true,
+    domain: [0, interpolateMax],
+    nice: true,
+  });
+
+  return (
+    <>
+      <Axis //Axis Y
+        key={"axis-left"}
+        orientation="left"
+        scale={yScale}
+        numTicks={10}
+        stroke={colorStroke}
+        tickStroke={colorStroke}
+        tickFormat={tickFormatY}
+        tickLabelProps={tickLabelPropsY}
+      />
+      <Axis //Axis X
+        key={"axis-bottom"}
+        top={yMax}
+        orientation="bottom"
+        scale={xScale}
+        numTicks={numTicksX}
+        stroke={colorStroke}
+        tickStroke={colorStroke}
+        tickFormat={tickFormatX}
+        tickLabelProps={tickLabelPropsX}
+      />
+      {selected.map((sel, i) => {
+        return (
+          <LinePath
+            stroke={dataConfig[sel].dataColor}
+            data={filteredData[i]}
+            key={`Line ${i}`}
+            strokeWidth={3}
+            curve={curveBasis}
+            x={x}
+            y={(d) => yScale(d.dataSelect)}
+          />
+        );
+      })}
+    </>
+  );
+}
+
+const AnimatedGraph = animated(Graph);
+
 function MultiLineGraph({
   dataUrl,
   selected,
@@ -23,6 +87,7 @@ function MultiLineGraph({
   parentHeight,
   dataConfig,
   timeTicks,
+  view,
 }) {
   const width = parentWidth;
   const height = 600;
@@ -30,10 +95,10 @@ function MultiLineGraph({
   const xMax = width - margin.left - margin.right;
   const yMax = height - margin.top - margin.bottom;
 
-  //Tutti gli state
+  //Tutti gli hook (useState)
   const [tooltipValueX, setTooltipValueX] = useState(null);
   const [tooltipValueY, setTooltipValueY] = useState(null);
-  const [items, setItems] = useState(false);
+
   const showTooltip = tooltipValueX != null;
 
   //Oggetto che contiene i miei accessors
@@ -62,15 +127,6 @@ function MultiLineGraph({
     setTooltipValueY(y0); //Valore contenuto (numeri) di questa coordinata
   };
 
-  const styles = useSpring({
-    loop: true,
-    to: [
-      { opacity: 1, },
-      { opacity: 0, },
-    ],
-    from: { opacity: 0, },
-  });
-
   //Funzioni per il formato dei tick
   const numTick = () => {
     if (timeTicks != null) return timeTicks;
@@ -91,12 +147,10 @@ function MultiLineGraph({
       return (d) => moment(d).format("ddd DD MMM  Y");
     }
   };
-
-  console.log(moment().startOf("year"), moment().endOf("year"));
   const tickNumberFormat = (n) => {
     if (n >= 1000000) {
       return Math.abs(n) > 999
-        ? Math.sign(n) * (Math.abs(n) / 1000000).toFixed(1) + " M"
+        ? Math.sign(n) * (Math.abs(n) / 1000000).toFixed(1) + " M "
         : Math.sign(n) * Math.abs(n);
     } else {
       return Math.abs(n) > 999
@@ -105,7 +159,7 @@ function MultiLineGraph({
     }
   };
 
-  //Formato dei numeri
+  //Formato dei tick dei numeri nell'asse Y
   function formatNumber(num) {
     return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
   }
@@ -138,14 +192,25 @@ function MultiLineGraph({
     return Max;
   }, [selected, arraySel]);
 
+  //L'animazione usando useSpring
+  const { interpolateMax } = useSpring({
+    interpolateMax: numberMax,
+    config: { duration: 1000 },
+    from: {
+      interpolateMax: 0,
+    },
+  });
+
   //Calcolo degli scale x, y
   const xScale = scaleTime({
     range: [0, xMax],
     round: true,
-    domain: [
-      Math.min(...rangeData.map((d) => new Date(d.data))),
-      Math.max(...rangeData.map((d) => new Date(d.data))),
-    ],
+    domain: (view === 'domain')
+      ? [
+          Math.min(...rangeData.map((d) => new Date(d.data))),
+          Math.max(...rangeData.map((d) => new Date(d.data))),
+        ]
+      : [new Date(startDate), new Date(endDate)],
   });
   const yScale = scaleLinear({
     range: [yMax, 0],
@@ -194,60 +259,47 @@ function MultiLineGraph({
             stroke="#e0e0e0"
             strokeOpacity={0.2}
           />
-          <Axis //Axis Y
-            key={"axis-left"}
-            orientation="left"
-            scale={yScale}
-            numTicks={10}
-            stroke="#C6B5DE"
-            tickStroke="#C6B5DE"
-            tickFormat={(d) => tickNumberFormat(d)}
-            tickLabelProps={(d) => ({
+          <AnimatedGraph
+            //props Axis Y
+            interpolateMax={interpolateMax}
+            yMax={yMax}
+            colorStroke="#C6B5DE"
+            tickFormatY={(d) => tickNumberFormat(d)}
+            tickLabelPropsY={() => ({
               fontSize: 10,
               textAnchor: "end",
               fill: "#C6B5DE",
             })}
-          />
-          <Axis //Axis X
-            key={"axis-bottom"}
-            top={yMax}
-            orientation="bottom"
-            scale={xScale}
-            stroke="#C6B5DE"
-            numTicks={numTick(periodSelected)}
-            tickStroke="#C6B5DE"
-            tickFormat={tickFormatter(periodSelected)}
-            tickLabelProps={() => ({
+
+            //props Axis X
+            xScale={xScale}
+            numTicksX={numTick(periodSelected)}
+            tickFormatX={tickFormatter(periodSelected)}
+            tickLabelPropsX={() => ({
               fontSize: 10,
               textAnchor: "middle",
               fill: "#C6B5DE",
             })}
-          />
-          {selected.map((sel, i) => {
-            const data = dataUrl.map((datapoint) => ({
-              dataSelect: datapoint[sel],
-              date: datapoint.data,
-            }));
-            const filteredData = data.filter(
-              (d) =>
-                new Date(startDate) < new Date(d.date) &&
-                new Date(endDate) > new Date(d.date)
-            );
 
-            return (
-              <animated.div style={styles}>
-                <LinePath
-                  stroke={dataConfig[sel].dataColor}
-                  data={filteredData}
-                  key={`Line ${i}`}
-                  strokeWidth={3}
-                  curve={curveBasis}
-                  x={(d) => xScale(new Date(d.date).valueOf())}
-                  y={(d) => yScale(d.dataSelect)}
-                />
-              </animated.div>
-            );
-          })}
+            //props LinePath
+            dataConfig={dataConfig}
+            selected={selected}
+            dataUrl={dataUrl}
+            filteredData={
+              selected.map((sel) => {
+              const data = dataUrl.map((datapoint) => ({
+                dataSelect: datapoint[sel],
+                date: datapoint.data,
+              }));
+              const filteredData = data.filter(
+                (d) =>
+                  new Date(startDate) < new Date(d.date) &&
+                  new Date(endDate) > new Date(d.date)
+              );
+              return filteredData;
+            })}
+            x={(d) => xScale(new Date(d.date).valueOf())}
+          />
 
           {showTooltip && (
             <g>
