@@ -32,11 +32,11 @@ Set the object.
 ### startDate
 Type: _date **required**_
 
-Set the start date for the visualizzation (tip: use moment.js).
+Set the start date for the visualization (tip: use moment.js).
 ### endDate
 Type: _date **required**_
 
-Set the end date for the visualizzation (tip: use moment.js).
+Set the end date for the visualization (tip: use moment.js).
 ### selected
 Type: _array[] **required**_
 
@@ -49,10 +49,10 @@ Set the period selected, that allows you to have a different ticks visualization
 Type: _number_
 
 Set the number of ticks to show in the X-axis.
-### showTooltip
-Type: _boolean "true **|** false"_
+### view
+Type: _string "domain" **|** "period"_
 
-Set the showTooltip.
+Allow to see a different visualization mode.
 ________________________________________________________________________________
 ### `<TooltipCircle />`
 ### tooltipLeft
@@ -71,4 +71,4 @@ ________________________________________________________________________________
 ## Learn More
 To use others components of visx, take a look [@visx](https://github.com/airbnb/visx).
 
-To learn more about React, check out [React documentation](https://reactjs.org/).
+To learn more about React and react-spring, check out [React documentation](https://reactjs.org/) and [react-spring](https://react-spring.io/).
