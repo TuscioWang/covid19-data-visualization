@@ -14,19 +14,23 @@ import moment from "moment";
 
 function Graph({
   interpolateMax,
+  view,
+  xMax,
   yMax,
   colorStroke,
   tickFormatY,
   tickLabelPropsY,
   selected,
-  dataUrl,
   filteredData,
   dataConfig,
-  x,
-  xScale,
   numTicksX,
   tickFormatX,
   tickLabelPropsX,
+  numTicksGrid,
+  domainStartDate,
+  domainEndDate,
+  periodStartDate,
+  periodEndDate,
 }) {
   const yScale = scaleLinear({
     range: [yMax, 0],
@@ -35,8 +39,25 @@ function Graph({
     nice: true,
   });
 
+  const xScale = scaleTime({
+    range: [0, xMax],
+    round: true,
+    domain:
+      view === "domain"
+        ? [domainStartDate, domainEndDate]
+        : [periodStartDate, periodEndDate],
+  });
+
   return (
     <>
+      <GridColumns
+        numTicks={numTicksGrid}
+        scale={xScale}
+        width={xMax}
+        height={yMax}
+        stroke={colorStroke}
+        strokeOpacity={0.2}
+      />
       <Axis //Axis Y
         key={"axis-left"}
         orientation="left"
@@ -66,7 +87,7 @@ function Graph({
             key={`Line ${i}`}
             strokeWidth={3}
             curve={curveBasis}
-            x={x}
+            x={(d) => xScale(new Date(d.date).valueOf())}
             y={(d) => yScale(d.dataSelect)}
           />
         );
@@ -186,7 +207,7 @@ function MultiLineGraph({
   const numberMax = useMemo(() => {
     let Max = 0;
     for (let i = 0; i < selected.length; i++) {
-      const currentMax = Math.max(...arraySel[i].map(accessors.yAccessor));
+      const currentMax = Math.max(...arraySel[i].map((d) => d.dataSelect));
       if (currentMax > Max) Max = currentMax;
     }
     return Max;
@@ -201,17 +222,41 @@ function MultiLineGraph({
     },
   });
 
+  const { domainStartDate, domainEndDate, periodStartDate, periodEndDate } = useSpring({
+    domainStartDate: Math.min(...rangeData.map((d) => new Date(d.data))),
+    domainEndDate: Math.max(...rangeData.map((d) => new Date(d.data))),
+    periodStartDate: new Date(startDate).getTime(),
+    periodEndDate: new Date(endDate).getTime(),
+    from: {
+      domainStartDate: new Date(startDate).getTime(),
+      domainEndDate: new Date(endDate).getTime(),
+      periodStartsDate: new Date(startDate).getTime(),
+      periodEndDate: new Date(endDate).getTime(),
+    },
+  });
+
+  /*  const { periodStartDate, periodEndDate } = useSpring({
+    periodStartDate: new Date(startDate).getTime(),
+    periodEndDate: new Date(endDate).getTime(),
+    from: {
+      periodStartsDate: new Date(startDate).getTime(),
+      periodEndDate: new Date(endDate).getTime(),
+    },
+  }); */
+
   //Calcolo degli scale x, y
   const xScale = scaleTime({
     range: [0, xMax],
     round: true,
-    domain: (view === 'domain')
-      ? [
-          Math.min(...rangeData.map((d) => new Date(d.data))),
-          Math.max(...rangeData.map((d) => new Date(d.data))),
-        ]
-      : [new Date(startDate), new Date(endDate)],
+    domain:
+      view === "domain"
+        ? [
+            Math.min(...rangeData.map((d) => new Date(d.data))),
+            Math.max(...rangeData.map((d) => new Date(d.data))),
+          ]
+        : [new Date(startDate), new Date(endDate)],
   });
+
   const yScale = scaleLinear({
     range: [yMax, 0],
     round: true,
@@ -251,15 +296,10 @@ function MultiLineGraph({
           onTouchStart={handleMouseOver}
           onMouseOut={() => setTooltipValueX(null)}
         >
-          <GridColumns
-            numTicks={numTick(periodSelected)}
-            scale={xScale}
-            width={xMax}
-            height={yMax}
-            stroke="#e0e0e0"
-            strokeOpacity={0.2}
-          />
           <AnimatedGraph
+            //GridColumns X
+            numTicksGrid={numTick(periodSelected)}
+            xMax={xMax}
             //props Axis Y
             interpolateMax={interpolateMax}
             yMax={yMax}
@@ -270,9 +310,11 @@ function MultiLineGraph({
               textAnchor: "end",
               fill: "#C6B5DE",
             })}
-
             //props Axis X
-            xScale={xScale}
+            domainStartDate={domainStartDate}
+            domainEndDate={domainEndDate}
+            periodStartDate={periodStartDate}
+            periodEndDate={periodEndDate}
             numTicksX={numTick(periodSelected)}
             tickFormatX={tickFormatter(periodSelected)}
             tickLabelPropsX={() => ({
@@ -280,13 +322,12 @@ function MultiLineGraph({
               textAnchor: "middle",
               fill: "#C6B5DE",
             })}
-
             //props LinePath
+            view={view}
             dataConfig={dataConfig}
             selected={selected}
             dataUrl={dataUrl}
-            filteredData={
-              selected.map((sel) => {
+            filteredData={selected.map((sel) => {
               const data = dataUrl.map((datapoint) => ({
                 dataSelect: datapoint[sel],
                 date: datapoint.data,
@@ -298,7 +339,6 @@ function MultiLineGraph({
               );
               return filteredData;
             })}
-            x={(d) => xScale(new Date(d.date).valueOf())}
           />
 
           {showTooltip && (

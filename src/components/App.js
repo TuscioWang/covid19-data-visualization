@@ -16,7 +16,6 @@ import { CHECKBOX_DATA } from "./AppConfig";
 import {
   FormLabel,
   ButtonGroup,
-  Switch,
   Radio,
   RadioGroup,
 } from "@material-ui/core";
